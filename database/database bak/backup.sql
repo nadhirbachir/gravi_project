@@ -78,6 +78,36 @@ $$;
 ALTER FUNCTION public.accept_connection(p_user_id bigint, p_target_user_id bigint) OWNER TO postgres;
 
 --
+-- Name: add_attachment(smallint, text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.add_attachment(p_type smallint, p_url text) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_attachment_id UUID;
+BEGIN
+    -- Validate inputs
+    IF p_url IS NULL OR TRIM(p_url) = '' THEN
+        RAISE EXCEPTION 'Attachment URL cannot be empty.';
+    END IF;
+
+    -- You might add more validation here for p_type if you have specific allowed values.
+    -- For example: IF p_type NOT IN (1, 2, 3) THEN RAISE EXCEPTION 'Invalid attachment type.'; END IF;
+
+    -- Insert the new attachment record
+    INSERT INTO attachments (type, url)
+    VALUES (p_type, p_url)
+    RETURNING attachment_id INTO v_attachment_id;
+
+    RETURN v_attachment_id;
+END;
+$$;
+
+
+ALTER FUNCTION public.add_attachment(p_type smallint, p_url text) OWNER TO postgres;
+
+--
 -- Name: add_person(text, text, text, integer, date, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -305,6 +335,106 @@ $$;
 ALTER FUNCTION public.create_connection(p_user_id bigint, p_target_user_id bigint) OWNER TO postgres;
 
 --
+-- Name: create_private_chat(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.create_private_chat(p_user1_id bigint, p_user2_id bigint) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_chat_id UUID;
+    v_connection_status SMALLINT;
+    v_existing_chat_id UUID;
+BEGIN
+    -- 1. Prevent self-chat
+    IF p_user1_id IS NULL OR p_user2_id IS NULL OR p_user1_id = p_user2_id 
+	OR NOT EXISTS (SELECT 1 FROM users u WHERE u.user_id = p_user1_id)
+	OR NOT EXISTS (SELECT 1 FROM users u WHERE u.user_id = p_user2_id)
+	THEN
+        RAISE EXCEPTION 'problem creating chat, parameters issue (user1_id, user2_id)';
+    END IF;
+
+    -- 2. Check for existing 1-on-1 chat between these two participants
+    -- This query finds a chat where both p_user1_id and p_user2_id are participants,
+    -- and that chat has exactly two participants.
+    SELECT cp.chat_id
+    INTO v_existing_chat_id
+    FROM chat_participants cp
+    WHERE cp.participant_id = p_user1_id
+    AND EXISTS (
+        SELECT 1
+        FROM chat_participants cp2
+        WHERE cp2.chat_id = cp.chat_id AND cp2.participant_id = p_user2_id
+    )
+    AND (
+        SELECT COUNT(*) FROM chat_participants cp3 WHERE cp3.chat_id = cp.chat_id
+    ) = 2
+    LIMIT 1; -- Should only find one such chat if your chat_participants design is sound
+
+    IF v_existing_chat_id IS NOT NULL THEN
+        RAISE NOTICE 'A chat already exists between participants % and %. Returning existing chat ID.', p_user1_id, p_user2_id;
+        RETURN v_existing_chat_id;
+    END IF;
+
+    -- 3. Check connection status for blocking
+    -- Call find_connection with a consistent order of user IDs if your find_connection
+    -- requires it, or ensure find_connection handles permutations.
+    v_connection_status := find_connection(p_user1_id, p_user2_id);
+
+    -- Conditions for blocking: status is 2 (user1 blocked user2), 4 (user2 blocked user1), or 6 (mutual block)
+    IF v_connection_status <> 1 THEN
+        RAISE EXCEPTION 'Chat cannot be created due to blocking or pending status (status %) between participants % and %.', v_connection_status, p_user1_id, p_user2_id;
+    END IF;
+
+    -- 4. Create the new chat
+    INSERT INTO chats DEFAULT VALUES
+    RETURNING chat_id INTO v_chat_id;
+
+    -- 5. Add participants to the new chat
+    INSERT INTO chat_participants (chat_id, participant_id)
+    VALUES (v_chat_id, p_user1_id);
+
+    INSERT INTO chat_participants (chat_id, participant_id)
+    VALUES (v_chat_id, p_user2_id);
+
+    RETURN v_chat_id;
+END;
+$$;
+
+
+ALTER FUNCTION public.create_private_chat(p_user1_id bigint, p_user2_id bigint) OWNER TO postgres;
+
+--
+-- Name: delete_chat_if_no_participants(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.delete_chat_if_no_participants() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    -- Variable to store the count of remaining participants for the chat
+    participant_count INT;
+BEGIN
+    -- Count the number of active participants for the chat that the deleted participant belonged to
+    SELECT COUNT(*)
+    INTO participant_count
+    FROM chat_participants
+    WHERE chat_id = OLD.chat_id; -- OLD refers to the row that was just deleted from chat_participants
+
+    -- If no participants are left for this chat, delete the chat
+    IF participant_count = 0 THEN
+        DELETE FROM chats
+        WHERE chat_id = OLD.chat_id;
+    END IF;
+
+    RETURN OLD; -- Allows the original DELETE operation on chat_participants to proceed
+END;
+$$;
+
+
+ALTER FUNCTION public.delete_chat_if_no_participants() OWNER TO postgres;
+
+--
 -- Name: delete_connection(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -410,6 +540,112 @@ $$;
 
 
 ALTER FUNCTION public.edu_mview_changes_trgfun() OWNER TO postgres;
+
+--
+-- Name: find_chat_by_participants(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.find_chat_by_participants(p_user1_id bigint, p_user2_id bigint) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_chat_id UUID;
+BEGIN
+    -- Prevent searching for a chat with the same user
+    IF p_user1_id IS NULL OR p_user2_id IS NULL OR p_user1_id = p_user2_id 
+	OR NOT EXISTS (SELECT 1 FROM users u WHERE u.user_id = p_user1_id)
+	OR NOT EXISTS (SELECT 1 FROM users u WHERE u.user_id = p_user2_id)
+	THEN
+        RETURN NULL;
+    END IF;
+
+    -- Look for a chat where both users are participants AND the chat has exactly two participants.
+    SELECT cp.chat_id
+    INTO v_chat_id
+    FROM chat_participants cp
+    WHERE cp.participant_id = p_user1_id
+      AND EXISTS (
+          SELECT 1
+          FROM chat_participants cp2
+          WHERE cp2.chat_id = cp.chat_id
+            AND cp2.participant_id = p_user2_id
+      )
+      AND (
+          SELECT COUNT(*)
+          FROM chat_participants cp3
+          WHERE cp3.chat_id = cp.chat_id
+      ) = 2
+    LIMIT 1; -- Ensure only one chat is returned if multiple somehow matched (though UNIQUE constraint on chat_participants(chat_id, participant_id) should prevent issues).
+
+    RETURN v_chat_id;
+
+	EXCEPTION
+	WHEN OTHERS THEN
+		RAISE EXCEPTION 'Exception occured %' , SQLERRM
+	END;
+END;
+$$;
+
+
+ALTER FUNCTION public.find_chat_by_participants(p_user1_id bigint, p_user2_id bigint) OWNER TO postgres;
+
+--
+-- Name: find_chat_by_participants_username(text, text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.find_chat_by_participants_username(p_user1_username text, p_user2_username text) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_user1_id BIGINT;
+    v_user2_id BIGINT;
+    v_chat_id UUID;
+BEGIN
+    -- 1. Validate usernames and retrieve user_ids
+    IF p_user1_username IS NULL OR p_user2_username IS NULL OR p_user1_username = p_user2_username THEN
+        RETURN NULL;
+    END IF;
+
+    SELECT user_id INTO v_user1_id FROM users WHERE username = p_user1_username;
+    SELECT user_id INTO v_user2_id FROM users WHERE username = p_user2_username;
+
+    -- If either username does not exist, return NULL
+    IF v_user1_id IS NULL OR v_user2_id IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    -- 2. Look for a chat where both users are participants and the chat has exactly two participants.
+    -- This approach is generally more robust for finding chats with specific participants.
+    SELECT cp.chat_id
+    INTO v_chat_id
+    FROM chat_participants cp
+    WHERE cp.participant_id = v_user1_id
+      AND EXISTS (
+          SELECT 1
+          FROM chat_participants cp2
+          WHERE cp2.chat_id = cp.chat_id
+            AND cp2.participant_id = v_user2_id
+      )
+      AND (
+          SELECT COUNT(*)
+          FROM chat_participants cp3
+          WHERE cp3.chat_id = cp.chat_id
+      ) = 2
+    LIMIT 1; -- Ensure only one chat is returned if multiple somehow matched (e.g., due to data inconsistencies)
+
+    RETURN v_chat_id;
+
+-- Corrected EXCEPTION block syntax
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Log the error for debugging purposes if needed
+        RAISE WARNING 'An exception occurred in find_chat_by_participants_username: %', SQLERRM;
+        RETURN NULL; -- Or re-raise if you want the calling application to handle it
+END;
+$$;
+
+
+ALTER FUNCTION public.find_chat_by_participants_username(p_user1_username text, p_user2_username text) OWNER TO postgres;
 
 --
 -- Name: find_connection(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -645,6 +881,34 @@ $$;
 ALTER FUNCTION public.get_following(user_id_src bigint) OWNER TO postgres;
 
 --
+-- Name: get_messages(uuid, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_messages(p_chat_id uuid, p_limit integer DEFAULT 40, p_page_number integer DEFAULT 1) RETURNS TABLE(message_id uuid, chat_id uuid, sender_id bigint, content text, url text, file_type text, created_at timestamp with time zone, last_update timestamp with time zone, seen boolean)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_offset INT;
+BEGIN
+    -- Calculate the offset for pagination
+    IF p_page_number < 1 THEN
+        p_page_number := 1; -- Ensure page number is at least 1
+    END IF;
+    v_offset := (p_page_number - 1) * p_limit;
+
+    RETURN QUERY
+    SELECT * FROM get_messages_view v
+    WHERE
+        v.chat_id = p_chat_id
+    LIMIT p_limit
+    OFFSET v_offset;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_messages(p_chat_id uuid, p_limit integer, p_page_number integer) OWNER TO postgres;
+
+--
 -- Name: get_user_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -676,6 +940,33 @@ $$;
 
 
 ALTER FUNCTION public.get_user_by_id(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: get_user_chats(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_chats(p_user_id bigint) RETURNS TABLE(chat_id uuid, other_participant_id bigint, other_participant_username character varying, profile_pic_url character varying, other_participant_full_name character varying, last_message_content text, last_message_created_at timestamp with time zone)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+	chsv.chat_id,
+	chsv.other_participant_id,
+	chsv.other_participant_username,
+	chsv.profile_pic_url,
+	chsv.other_participant_full_name::VARCHAR(200),
+	chsv.last_message_content,
+	chsv.last_message_created_at
+    FROM
+        chat_summaries_view chsv
+    WHERE
+        chsv.user_id = p_user_id; -- Filter the view by the provided user ID
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_chats(p_user_id bigint) OWNER TO postgres;
 
 --
 -- Name: is_followed_by(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -716,6 +1007,65 @@ $$;
 
 
 ALTER FUNCTION public.prevent_duplicate_or_reversed_connections() OWNER TO postgres;
+
+--
+-- Name: send_message(uuid, bigint, text, uuid); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.send_message(p_chat_id uuid, p_sender_id bigint, p_content text, p_attachment_id uuid DEFAULT NULL::uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_recipient_id BIGINT;
+    v_connection_status SMALLINT;
+    v_sender_exists SMALLINT;
+    v_recipient_exists SMALLINT;
+    v_message_id UUID;
+BEGIN
+    -- 1. Validate chat existence and get recipient ID
+    SELECT cp.participant_id
+    INTO v_recipient_id
+    FROM chat_participants cp
+    WHERE cp.chat_id = p_chat_id
+      AND cp.participant_id <> p_sender_id
+    LIMIT 1;
+
+    IF v_recipient_id IS NULL THEN
+        RAISE EXCEPTION 'Chat ID % does not exist or sender % is not a participant, or chat is not a 1-on-1 chat.', p_chat_id, p_sender_id;
+    END IF;
+
+    -- 2. Validate sender and recipient existence using user_exists()
+    v_sender_exists := user_exists(p_sender_id);
+    v_recipient_exists := user_exists(v_recipient_id);
+
+    IF v_sender_exists = -1 THEN
+        RAISE EXCEPTION 'Sender user (ID: %) does not exist.', p_sender_id;
+    END IF;
+
+    IF v_recipient_exists = -1 THEN
+        RAISE EXCEPTION 'Recipient user (ID: %) does not exist.', v_recipient_id;
+    END IF;
+
+    -- 3. Check connection status for blocking between sender and recipient
+    -- Assumes find_connection from create_private_chat_function is available.
+    v_connection_status := find_connection(p_sender_id, v_recipient_id);
+
+    -- Conditions for blocking: status is 2 (sender blocked recipient), 4 (recipient blocked sender), or 6 (mutual block)
+    IF v_connection_status <> 1 THEN
+        RAISE EXCEPTION 'Message cannot be sent due to blocking or pending status (status %) between sender % and recipient %.', v_connection_status, p_sender_id, v_recipient_id;
+    END IF;
+
+    -- 4. Insert the message
+    INSERT INTO messages (chat_id, sender_id, content, attachment_id)
+    VALUES (p_chat_id, p_sender_id, p_content, p_attachment_id)
+    RETURNING message_id INTO v_message_id;
+
+    RETURN v_message_id;
+END;
+$$;
+
+
+ALTER FUNCTION public.send_message(p_chat_id uuid, p_sender_id bigint, p_content text, p_attachment_id uuid) OWNER TO postgres;
 
 --
 -- Name: toggle_follow(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -863,6 +1213,30 @@ $$;
 ALTER FUNCTION public.unfollow_user(follow_src bigint, follow_dst bigint) OWNER TO postgres;
 
 --
+-- Name: update_chat_last_update(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_chat_last_update() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Update the last_update timestamp of the chat associated with the message.
+    -- OLD.chat_id is used for DELETE operations, NEW.chat_id for INSERT/UPDATE.
+    -- For INSERT and UPDATE, NEW.chat_id will be available.
+    -- For DELETE, if you wanted to update the chat based on a deleted message,
+    -- you would use OLD.chat_id, but typically last_update is on new/modified messages.
+    UPDATE chats
+    SET last_update = NOW()
+    WHERE chat_id = NEW.chat_id;
+
+    RETURN NEW; -- For AFTER INSERT/UPDATE triggers, RETURN NEW is standard.
+END;
+$$;
+
+
+ALTER FUNCTION public.update_chat_last_update() OWNER TO postgres;
+
+--
 -- Name: update_person(bigint, text, text, text, integer, date, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -916,6 +1290,46 @@ $$;
 
 
 ALTER FUNCTION public.update_person(p_person_id bigint, p_first_name text, p_middle_name text, p_last_name text, p_country_id integer, p_date_of_birth date, p_gender integer) OWNER TO postgres;
+
+--
+-- Name: update_seen(uuid[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_seen(p_message_ids uuid[]) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE messages
+    SET
+        seen = TRUE
+    WHERE
+        message_id = ANY(p_message_ids)
+        AND seen = FALSE; -- Only update if not already seen
+END;
+$$;
+
+
+ALTER FUNCTION public.update_seen(p_message_ids uuid[]) OWNER TO postgres;
+
+--
+-- Name: update_seen(bigint, uuid[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_seen(p_user_id bigint, p_message_ids uuid[]) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE messages
+    SET
+        seen = TRUE
+    WHERE
+        message_id = ANY(p_message_ids)
+        AND seen = FALSE AND sender_id <> p_user_id; -- Only update if not already seen
+END;
+$$;
+
+
+ALTER FUNCTION public.update_seen(p_user_id bigint, p_message_ids uuid[]) OWNER TO postgres;
 
 --
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -983,9 +1397,55 @@ $$;
 
 ALTER FUNCTION public.update_user(p_user_id bigint, p_user_name text, p_phone_number text, p_email text, p_password_hash text, p_is_email_verified boolean, p_status smallint) OWNER TO postgres;
 
+--
+-- Name: user_exists(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_exists(p_user_id bigint) RETURNS smallint
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	v_user_exists SMALLINT;
+BEGIN
+	IF p_user_id IS NULL OR p_user_id < 0 THEN
+	RETURN -1;
+	END IF;
+	
+	SELECT 1 INTO v_user_exists FROM users u WHERE u.user_id = p_user_id;
+	
+	IF v_user_exists IS NOT NULL THEN RETURN v_user_exists;
+	ELSE RETURN -1;
+	END IF;
+	
+	EXCEPTION
+    WHEN OTHERS THEN
+        -- Log the error for debugging purposes if needed
+        RAISE WARNING 'An exception occurred in user_exists: %', SQLERRM;
+        RETURN -1; -- Or re-raise if you want the calling application to handle it
+END;
+$$;
+
+
+ALTER FUNCTION public.user_exists(p_user_id bigint) OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: attachments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.attachments (
+    attachment_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    type smallint NOT NULL,
+    url text NOT NULL,
+    uploaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_update timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.attachments OWNER TO postgres;
 
 --
 -- Name: certificate_types; Type: TABLE; Schema: public; Owner: postgres
@@ -1021,6 +1481,165 @@ ALTER SEQUENCE public.certificate_types_certificate_type_id_seq OWNER TO postgre
 
 ALTER SEQUENCE public.certificate_types_certificate_type_id_seq OWNED BY public.certificate_types.certificate_type_id;
 
+
+--
+-- Name: chat_participants; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.chat_participants (
+    chat_participant_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    chat_id uuid NOT NULL,
+    participant_id bigint NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_update timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.chat_participants OWNER TO postgres;
+
+--
+-- Name: chats; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.chats (
+    chat_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_update timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.chats OWNER TO postgres;
+
+--
+-- Name: messages; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.messages (
+    message_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    chat_id uuid NOT NULL,
+    sender_id bigint NOT NULL,
+    content text,
+    attachment_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_update timestamp with time zone DEFAULT now() NOT NULL,
+    seen boolean DEFAULT false NOT NULL,
+    CONSTRAINT valid_message CHECK ((((content IS NOT NULL) AND (TRIM(BOTH FROM content) <> ''::text)) OR (attachment_id <> NULL::uuid)))
+);
+
+
+ALTER TABLE public.messages OWNER TO postgres;
+
+--
+-- Name: people; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.people (
+    person_id bigint NOT NULL,
+    first_name character varying(50) NOT NULL,
+    middle_name character varying(50),
+    last_name character varying(50) NOT NULL,
+    country_id integer NOT NULL,
+    date_of_birth date NOT NULL,
+    gender smallint NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT age_validation CHECK (((date_of_birth <= (CURRENT_DATE - '13 years'::interval)) AND (date_of_birth >= (CURRENT_DATE - '120 years'::interval)))),
+    CONSTRAINT name_validation CHECK (((length(TRIM(BOTH FROM first_name)) > 0) AND (length(TRIM(BOTH FROM first_name)) > 0))),
+    CONSTRAINT people_date_of_birth_check CHECK ((date_of_birth <= (CURRENT_DATE - '13 years'::interval))),
+    CONSTRAINT valid_gender CHECK (((gender >= 0) AND (gender <= 2)))
+);
+
+
+ALTER TABLE public.people OWNER TO postgres;
+
+--
+-- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.profiles (
+    profile_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    headline character varying(255) NOT NULL,
+    bio character varying(2500),
+    profile_pic_url character varying(255),
+    banner_pic_url character varying(255),
+    website character varying(255),
+    github character varying(255),
+    open_to_work boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT profiles_headline_check CHECK ((length(TRIM(BOTH FROM headline)) >= 10))
+);
+
+
+ALTER TABLE public.profiles OWNER TO postgres;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    user_id bigint NOT NULL,
+    person_id bigint NOT NULL,
+    username character varying(50) NOT NULL,
+    phone_number character varying(20),
+    email character varying(150) NOT NULL,
+    is_email_verified boolean DEFAULT false,
+    password_hash character varying(128) NOT NULL,
+    status smallint DEFAULT 0 NOT NULL,
+    last_login timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT email_format_check CHECK (((email)::text ~* '^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,10}$'::text)),
+    CONSTRAINT users_password_hash_check CHECK ((length(TRIM(BOTH FROM password_hash)) >= 64)),
+    CONSTRAINT users_phone_number_check CHECK (((phone_number)::text ~* '^(\+?[0-9\s\-]{7,20})$'::text)),
+    CONSTRAINT users_username_check CHECK ((length(TRIM(BOTH FROM username)) > 1))
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: chat_summaries_view; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.chat_summaries_view AS
+ SELECT c.chat_id,
+    cp_main.participant_id AS user_id,
+    cp_other.participant_id AS other_participant_id,
+    u_other.username AS other_participant_username,
+    p_other.profile_pic_url,
+        CASE
+            WHEN (pe_other.middle_name IS NOT NULL) THEN concat_ws(' '::text, pe_other.first_name, pe_other.middle_name, pe_other.last_name)
+            ELSE concat_ws(' '::text, pe_other.first_name, pe_other.last_name)
+        END AS other_participant_full_name,
+        CASE
+            WHEN (m_latest.attachment_id IS NOT NULL) THEN concat(u_other.username, ' sent an attachment')
+            ELSE m_latest.content
+        END AS last_message_content,
+    m_latest.created_at AS last_message_created_at
+   FROM ((((((public.chats c
+     JOIN public.chat_participants cp_main ON ((c.chat_id = cp_main.chat_id)))
+     LEFT JOIN LATERAL ( SELECT cp_inner.participant_id
+           FROM public.chat_participants cp_inner
+          WHERE ((cp_inner.chat_id = c.chat_id) AND (cp_inner.participant_id <> cp_main.participant_id))
+         LIMIT 1) cp_other ON (true))
+     LEFT JOIN public.users u_other ON ((cp_other.participant_id = u_other.user_id)))
+     LEFT JOIN public.profiles p_other ON ((u_other.user_id = p_other.user_id)))
+     LEFT JOIN public.people pe_other ON ((u_other.person_id = pe_other.person_id)))
+     LEFT JOIN LATERAL ( SELECT m_inner.content,
+            m_inner.attachment_id,
+            m_inner.created_at
+           FROM public.messages m_inner
+          WHERE (m_inner.chat_id = c.chat_id)
+          ORDER BY m_inner.created_at DESC
+         LIMIT 1) m_latest ON (true))
+  WHERE (( SELECT count(*) AS count
+           FROM public.chat_participants cp_count
+          WHERE (cp_count.chat_id = c.chat_id)) = 2);
+
+
+ALTER VIEW public.chat_summaries_view OWNER TO postgres;
 
 --
 -- Name: connections; Type: TABLE; Schema: public; Owner: postgres
@@ -1160,31 +1779,6 @@ CREATE TABLE public.learning_modes (
 ALTER TABLE public.learning_modes OWNER TO postgres;
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.users (
-    user_id bigint NOT NULL,
-    person_id bigint NOT NULL,
-    username character varying(50) NOT NULL,
-    phone_number character varying(20),
-    email character varying(150) NOT NULL,
-    is_email_verified boolean DEFAULT false,
-    password_hash character varying(128) NOT NULL,
-    status smallint DEFAULT 0 NOT NULL,
-    last_login timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT email_format_check CHECK (((email)::text ~* '^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,10}$'::text)),
-    CONSTRAINT users_password_hash_check CHECK ((length(TRIM(BOTH FROM password_hash)) >= 64)),
-    CONSTRAINT users_phone_number_check CHECK (((phone_number)::text ~* '^(\+?[0-9\s\-]{7,20})$'::text)),
-    CONSTRAINT users_username_check CHECK ((length(TRIM(BOTH FROM username)) > 1))
-);
-
-
-ALTER TABLE public.users OWNER TO postgres;
-
---
 -- Name: edu_user_details; Type: MATERIALIZED VIEW; Schema: public; Owner: postgres
 --
 
@@ -1276,6 +1870,32 @@ ALTER SEQUENCE public.follows_follow_id_seq OWNED BY public.follows.follow_id;
 
 
 --
+-- Name: get_messages_view; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.get_messages_view AS
+ SELECT m.message_id,
+    m.chat_id,
+    m.sender_id,
+    m.content,
+    a.url,
+        CASE
+            WHEN (a.type = 1) THEN 'file'::text
+            WHEN (a.type = 2) THEN 'picture'::text
+            WHEN (a.type = 3) THEN 'video'::text
+            ELSE 'unknown'::text
+        END AS file_type,
+    m.created_at,
+    m.last_update,
+    m.seen
+   FROM (public.messages m
+     JOIN public.attachments a ON ((m.attachment_id = a.attachment_id)))
+  ORDER BY m.created_at;
+
+
+ALTER VIEW public.get_messages_view OWNER TO postgres;
+
+--
 -- Name: industries_industry_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1341,29 +1961,6 @@ ALTER SEQUENCE public.learning_modes_learning_mode_id_seq OWNED BY public.learni
 
 
 --
--- Name: people; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.people (
-    person_id bigint NOT NULL,
-    first_name character varying(50) NOT NULL,
-    middle_name character varying(50),
-    last_name character varying(50) NOT NULL,
-    country_id integer NOT NULL,
-    date_of_birth date NOT NULL,
-    gender smallint NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT age_validation CHECK (((date_of_birth <= (CURRENT_DATE - '13 years'::interval)) AND (date_of_birth >= (CURRENT_DATE - '120 years'::interval)))),
-    CONSTRAINT name_validation CHECK (((length(TRIM(BOTH FROM first_name)) > 0) AND (length(TRIM(BOTH FROM first_name)) > 0))),
-    CONSTRAINT people_date_of_birth_check CHECK ((date_of_birth <= (CURRENT_DATE - '13 years'::interval))),
-    CONSTRAINT valid_gender CHECK (((gender >= 0) AND (gender <= 2)))
-);
-
-
-ALTER TABLE public.people OWNER TO postgres;
-
---
 -- Name: people_person_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1418,28 +2015,6 @@ ALTER SEQUENCE public.proficiency_levels_proficiency_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.proficiency_levels_proficiency_id_seq OWNED BY public.proficiency_levels.proficiency_id;
 
-
---
--- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.profiles (
-    profile_id bigint NOT NULL,
-    user_id bigint NOT NULL,
-    headline character varying(255) NOT NULL,
-    bio character varying(2500),
-    profile_pic_url character varying(255),
-    banner_pic_url character varying(255),
-    website character varying(255),
-    github character varying(255),
-    open_to_work boolean DEFAULT true NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT profiles_headline_check CHECK ((length(TRIM(BOTH FROM headline)) >= 10))
-);
-
-
-ALTER TABLE public.profiles OWNER TO postgres;
 
 --
 -- Name: profiles_profile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1733,6 +2308,14 @@ ALTER TABLE ONLY public.users ALTER COLUMN user_id SET DEFAULT nextval('public.u
 
 
 --
+-- Data for Name: attachments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.attachments (attachment_id, type, url, uploaded_at, last_update) FROM stdin;
+\.
+
+
+--
 -- Data for Name: certificate_types; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1744,6 +2327,22 @@ COPY public.certificate_types (certificate_type_id, name, description) FROM stdi
 5	Apprenticeship	A formal, structured work-based learning program that combines hands-on work with classroom instruction, usually in skilled trades or technical fields.
 6	Short Courses / Workshops	Short-duration courses that focus on specific skills or knowledge, often for professional development or personal enrichment.
 7	Language School	A school focused on teaching one or more languages, typically for non-native speakers aiming to improve fluency in a new language.
+\.
+
+
+--
+-- Data for Name: chat_participants; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.chat_participants (chat_participant_id, chat_id, participant_id, created_at, last_update) FROM stdin;
+\.
+
+
+--
+-- Data for Name: chats; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.chats (chat_id, created_at, last_update) FROM stdin;
 \.
 
 
@@ -2042,6 +2641,14 @@ COPY public.learning_modes (learning_mode_id, name, description) FROM stdin;
 4	Hybrid / Blended Learning	A combination of both in-person and online learning, allowing students flexibility in their learning environment.
 5	Evening / Weekend Classes	Courses held during evenings or weekends to accommodate students who work during traditional business hours.
 6	Self-paced	An education format where students can progress through the coursework at their own pace, without fixed deadlines or class schedules.
+\.
+
+
+--
+-- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.messages (message_id, chat_id, sender_id, content, attachment_id, created_at, last_update, seen) FROM stdin;
 \.
 
 
@@ -2386,11 +2993,43 @@ SELECT pg_catalog.setval('public.users_user_id_seq', 3, true);
 
 
 --
+-- Name: attachments attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.attachments
+    ADD CONSTRAINT attachments_pkey PRIMARY KEY (attachment_id);
+
+
+--
 -- Name: certificate_types certificate_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.certificate_types
     ADD CONSTRAINT certificate_types_pkey PRIMARY KEY (certificate_type_id);
+
+
+--
+-- Name: chat_participants chat_participants_chat_id_participant_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.chat_participants
+    ADD CONSTRAINT chat_participants_chat_id_participant_id_key UNIQUE (chat_id, participant_id);
+
+
+--
+-- Name: chat_participants chat_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.chat_participants
+    ADD CONSTRAINT chat_participants_pkey PRIMARY KEY (chat_participant_id);
+
+
+--
+-- Name: chats chats_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.chats
+    ADD CONSTRAINT chats_pkey PRIMARY KEY (chat_id);
 
 
 --
@@ -2463,6 +3102,14 @@ ALTER TABLE ONLY public.institution_types
 
 ALTER TABLE ONLY public.learning_modes
     ADD CONSTRAINT learning_modes_pkey PRIMARY KEY (learning_mode_id);
+
+
+--
+-- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_pkey PRIMARY KEY (message_id);
 
 
 --
@@ -2623,6 +3270,20 @@ CREATE INDEX follows_follower_id ON public.follows USING btree (follower_id);
 
 
 --
+-- Name: idx_chat_participants_chat_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_chat_participants_chat_id ON public.chat_participants USING btree (chat_id);
+
+
+--
+-- Name: idx_chat_participants_participant_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_chat_participants_participant_id ON public.chat_participants USING btree (participant_id);
+
+
+--
 -- Name: idx_connections_target_user_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -2735,6 +3396,20 @@ CREATE INDEX idx_users_username ON public.users USING btree (username);
 
 
 --
+-- Name: messages after_message_activity_update_chat_last_update; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER after_message_activity_update_chat_last_update AFTER INSERT OR UPDATE ON public.messages FOR EACH ROW EXECUTE FUNCTION public.update_chat_last_update();
+
+
+--
+-- Name: chat_participants after_participant_delete_cleanup_chat; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER after_participant_delete_cleanup_chat AFTER DELETE ON public.chat_participants FOR EACH ROW EXECUTE FUNCTION public.delete_chat_if_no_participants();
+
+
+--
 -- Name: connections check_duplicate_or_reversed_connection; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -2760,6 +3435,22 @@ CREATE TRIGGER trg_check_years_of_exp BEFORE INSERT OR UPDATE ON public.user_ski
 --
 
 CREATE TRIGGER update_connection_updated_at BEFORE UPDATE ON public.connections FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: chat_participants chat_participants_chat_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.chat_participants
+    ADD CONSTRAINT chat_participants_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(chat_id) ON DELETE CASCADE;
+
+
+--
+-- Name: chat_participants chat_participants_participant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.chat_participants
+    ADD CONSTRAINT chat_participants_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 
 --
@@ -2832,6 +3523,30 @@ ALTER TABLE ONLY public.follows
 
 ALTER TABLE ONLY public.follows
     ADD CONSTRAINT follows_follower_id_fkey FOREIGN KEY (follower_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: messages messages_attachment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_attachment_id_fkey FOREIGN KEY (attachment_id) REFERENCES public.attachments(attachment_id);
+
+
+--
+-- Name: messages messages_chat_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(chat_id) ON DELETE CASCADE;
+
+
+--
+-- Name: messages messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 
 --

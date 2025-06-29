@@ -46,19 +46,6 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
--- Name: company_status; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE public.company_status AS ENUM (
-    'inactive',
-    'active',
-    'suspended'
-);
-
-
-ALTER TYPE public.company_status OWNER TO postgres;
-
---
 -- Name: email_type; Type: DOMAIN; Schema: public; Owner: postgres
 --
 
@@ -67,19 +54,6 @@ CREATE DOMAIN public.email_type AS character varying(150)
 
 
 ALTER DOMAIN public.email_type OWNER TO postgres;
-
---
--- Name: remote_type; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE public.remote_type AS ENUM (
-    'onsite',
-    'hybrid',
-    'remote'
-);
-
-
-ALTER TYPE public.remote_type OWNER TO postgres;
 
 --
 -- Name: url_type; Type: DOMAIN; Schema: public; Owner: postgres
@@ -885,6 +859,23 @@ $$;
 ALTER FUNCTION public.follow_user(follow_src bigint, follow_dst bigint) OWNER TO postgres;
 
 --
+-- Name: fully_approve_company(uuid); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.fully_approve_company(IN p_company_id uuid)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	UPDATE companies
+    SET status = 1
+    WHERE company_id = p_company_id AND status IN (0,2);
+END
+$$;
+
+
+ALTER PROCEDURE public.fully_approve_company(IN p_company_id uuid) OWNER TO postgres;
+
+--
 -- Name: get_connections(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1146,6 +1137,122 @@ $$;
 ALTER FUNCTION public.prevent_duplicate_or_reversed_connections() OWNER TO postgres;
 
 --
+-- Name: reject_company_application(uuid); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.reject_company_application(IN p_company_id uuid)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE companies
+    SET status = 4
+    WHERE company_id = p_company_id AND status = 3;
+END;
+$$;
+
+
+ALTER PROCEDURE public.reject_company_application(IN p_company_id uuid) OWNER TO postgres;
+
+--
+-- Name: semi_approve_company(uuid); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.semi_approve_company(IN p_company_id uuid)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE companies
+    SET status = 2
+    WHERE company_id = p_company_id AND status = 3;
+END;
+$$;
+
+
+ALTER PROCEDURE public.semi_approve_company(IN p_company_id uuid) OWNER TO postgres;
+
+--
+-- Name: send_company_application(bigint, text, text, bigint, smallint, date, smallint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.send_company_application(p_by_user_id bigint, p_name text, p_website text, p_industry_id bigint, p_size smallint, p_founded_date date, p_location_id smallint) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_user RECORD;
+    v_company_count INTEGER;
+    v_pending_exists BOOLEAN;
+    v_new_company_id UUID;
+    v_email_domain TEXT;
+    v_website_domain TEXT;
+BEGIN
+    -- Check user exists
+    IF user_exists(p_by_user_id) = -1 THEN
+        RAISE EXCEPTION 'User does not exist.';
+    END IF;
+
+    -- Get user data
+    SELECT * INTO v_user FROM get_user_by_id(p_by_user_id);
+
+    IF NOT v_user.is_email_verified THEN
+        RAISE EXCEPTION 'User email is not verified.';
+    END IF;
+
+    -- Ensure name and website are present and valid
+    IF p_name IS NULL OR TRIM(p_name) = '' OR LENGTH(p_name) > 255 THEN
+        RAISE EXCEPTION 'Company name is invalid or too long.';
+    END IF;
+
+    IF p_website IS NULL OR TRIM(p_website) = '' OR LENGTH(p_website) > 150 THEN
+        RAISE EXCEPTION 'Company website is invalid or too long.';
+    END IF;
+
+    -- Validate that company name or website is not already taken
+    IF EXISTS (SELECT 1 FROM companies WHERE LOWER(name) = LOWER(p_name)) THEN
+        RAISE EXCEPTION 'Company name already exists.';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM companies WHERE LOWER(website) = LOWER(p_website)) THEN
+        RAISE EXCEPTION 'Company website already exists.';
+    END IF;
+
+    -- Check if user has at least one active company (status = 1)
+    v_company_count := user_active_companies_number(p_by_user_id);
+
+    IF v_company_count = 0 THEN
+        RAISE EXCEPTION 'You must have at least one active company to apply.';
+    END IF;
+
+    -- Check if user already has a pending company
+    v_pending_exists := user_pending_company_exists(p_by_user_id);
+
+    IF v_pending_exists THEN
+        RAISE EXCEPTION 'You already have a pending company application.';
+    END IF;
+
+    -- Insert the new company as pending (status 3)
+    INSERT INTO companies (
+        name, website, contact_email, industry_id, size,
+        founded_date, location_id, status
+    ) VALUES (
+        p_name, p_website, v_user.email, p_industry_id, p_size,
+        p_founded_date, p_location_id, 3 -- status 3 = pending
+    ) RETURNING company_id INTO v_new_company_id;
+
+    -- Register user as owner
+    INSERT INTO company_admins (company_id, user_id, role)
+    VALUES (v_new_company_id, p_by_user_id, 2);
+
+    RETURN v_new_company_id;
+
+EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Failed to submit application: %', SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.send_company_application(p_by_user_id bigint, p_name text, p_website text, p_industry_id bigint, p_size smallint, p_founded_date date, p_location_id smallint) OWNER TO postgres;
+
+--
 -- Name: send_message(uuid, bigint, text, uuid); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1203,6 +1310,23 @@ $$;
 
 
 ALTER FUNCTION public.send_message(p_chat_id uuid, p_sender_id bigint, p_content text, p_attachment_id uuid) OWNER TO postgres;
+
+--
+-- Name: suspend_company(uuid); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.suspend_company(IN p_company_id uuid)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE companies
+    SET status = 5
+    WHERE company_id = p_company_id;
+END;
+$$;
+
+
+ALTER PROCEDURE public.suspend_company(IN p_company_id uuid) OWNER TO postgres;
 
 --
 -- Name: toggle_follow(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1547,7 +1671,7 @@ BEGIN
         FROM company_admins ca
 		JOIN companies c ON ca.company_id = c.company_id
         WHERE user_id = p_user_id
-		AND role = 2 AND c.status < 3
+		AND role = 2 AND c.status = 1
     );
 END;
 $$;
@@ -1624,6 +1748,27 @@ $$;
 
 
 ALTER FUNCTION public.user_exists(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: user_pending_company_exists(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_pending_company_exists(p_user_id bigint) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN EXISTS(
+        SELECT 1
+        FROM company_admins ca
+		JOIN companies c USING(company_id)
+        WHERE user_id = p_user_id
+		AND role = 2 AND c.status = 3
+    );
+END;
+$$;
+
+
+ALTER FUNCTION public.user_pending_company_exists(p_user_id bigint) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -2667,7 +2812,7 @@ COPY public.chats (chat_id, created_at, last_update) FROM stdin;
 COPY public.companies (company_id, name, industry_id, size, founded_date, website, contact_email, location_id, description, logo_url, banner_url, remote_status, status, created_at, updated_at) FROM stdin;
 cdd107ae-4f52-4598-8cf7-cceb88b2b2dd	TechNova Solutions	18	4	2005-06-15	https://technova.com	info@technova.com	33	Cloud software services.	https://cdn.technova.com/logo.png	https://cdn.technova.com/banner.jpg	2	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01
 5939f0a8-5ac5-45ec-96c0-34fb06705442	Green Earth Org	11	2	1980-03-12	\N	contact@greenearth.org	145	Sustainability consultants.	\N	\N	1	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01
-6988043a-6188-479c-9edb-86c2cd79f6e7	Someone Inc.	5	2	2005-03-14	https://something.com	someone@something.com	34	\N	\N	\N	0	0	2025-06-29 22:23:51.128093+01	2025-06-29 22:23:51.128093+01
+6988043a-6188-479c-9edb-86c2cd79f6e7	Someone Inc.	5	2	2005-03-14	https://something.com	someone@something.com	34	\N	\N	\N	0	1	2025-06-29 22:23:51.128093+01	2025-06-30 00:30:24.119575+01
 \.
 
 

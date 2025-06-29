@@ -46,6 +46,52 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
+-- Name: company_status; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.company_status AS ENUM (
+    'inactive',
+    'active',
+    'suspended'
+);
+
+
+ALTER TYPE public.company_status OWNER TO postgres;
+
+--
+-- Name: email_type; Type: DOMAIN; Schema: public; Owner: postgres
+--
+
+CREATE DOMAIN public.email_type AS character varying(150)
+	CONSTRAINT email_type_check CHECK (((VALUE)::text ~* '^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,10}$'::text));
+
+
+ALTER DOMAIN public.email_type OWNER TO postgres;
+
+--
+-- Name: remote_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.remote_type AS ENUM (
+    'onsite',
+    'hybrid',
+    'remote'
+);
+
+
+ALTER TYPE public.remote_type OWNER TO postgres;
+
+--
+-- Name: url_type; Type: DOMAIN; Schema: public; Owner: postgres
+--
+
+CREATE DOMAIN public.url_type AS character varying(255)
+	CONSTRAINT url_type_check CHECK (((VALUE IS NULL) OR ((VALUE)::text ~* '^((https?|ftp):\/\/)?([a-z0-9-]+\.)+[a-z]{2,10}([\/?#].*)?$'::text)));
+
+
+ALTER DOMAIN public.url_type OWNER TO postgres;
+
+--
 -- Name: accept_connection(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -106,6 +152,97 @@ $$;
 
 
 ALTER FUNCTION public.add_attachment(p_type smallint, p_url text) OWNER TO postgres;
+
+--
+-- Name: add_company(bigint, text, text, bigint, smallint, date, smallint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.add_company(p_by_user_id bigint, p_name text, p_website text, p_industry_id bigint, p_size smallint, p_founded_date date, p_location_id smallint) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+    v_company_count INTEGER;
+    v_email TEXT;
+    v_is_verified BOOLEAN;
+    v_email_domain TEXT;
+    v_website_domain TEXT;
+    v_new_company_id UUID;
+    v_user RECORD;
+BEGIN
+    -- 🔒 1. Null input checks
+    IF p_by_user_id IS NULL OR p_name IS NULL OR TRIM(p_name) = '' OR
+       p_website IS NULL OR p_industry_id IS NULL OR p_size IS NULL OR
+       p_founded_date IS NULL OR p_location_id IS NULL THEN
+        RAISE EXCEPTION 'Missing required fields for creating a company.';
+    END IF;
+
+    -- ✅ 2. Validate length
+    IF LENGTH(p_name) > 255 THEN
+        RAISE EXCEPTION 'Company name cannot exceed 255 characters.';
+    END IF;
+
+    IF LENGTH(p_website) > 150 THEN
+        RAISE EXCEPTION 'Website URL cannot exceed 150 characters.';
+    END IF;
+
+    -- 👤 3. Check user existence & get email + verification
+    SELECT * INTO v_user FROM get_user_by_id(p_by_user_id);
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'User (ID: %) does not exist.', p_by_user_id;
+    END IF;
+
+    v_email := v_user.email;
+    v_is_verified := v_user.is_email_verified;
+
+    IF v_email IS NULL OR TRIM(v_email) = '' THEN
+        RAISE EXCEPTION 'User does not have a valid email.';
+    END IF;
+
+    IF NOT v_is_verified THEN
+        RAISE EXCEPTION 'User email must be verified before creating a company.';
+    END IF;
+
+    -- 🏢 4. Count owned companies
+    v_company_count := user_companies_number(p_by_user_id);
+
+    IF v_company_count >= 1 THEN
+        RAISE EXCEPTION 'User already owns a company. Please request approval for another.';
+    END IF;
+
+    -- 🌐 5. Validate domain match
+    v_email_domain := lower(split_part(v_email, '@', 2));
+    v_website_domain := lower(regexp_replace(p_website, '^https?://(www\.)?|/.*$', '', 'gi'));
+
+    IF v_email_domain IS NULL OR v_website_domain IS NULL OR v_email_domain <> v_website_domain THEN
+        RAISE EXCEPTION 'Email domain (%) does not match website domain (%), you need to request approval to create this company.', v_email_domain, v_website_domain;
+    END IF;
+
+    -- 🏭 6. Insert company
+    INSERT INTO companies (
+        name, website, contact_email, industry_id, size,
+        founded_date, location_id, status
+    ) VALUES (
+        p_name, p_website, v_email, p_industry_id, p_size,
+        p_founded_date, p_location_id, 0  -- status 0 = unofficial
+    )
+    RETURNING company_id INTO v_new_company_id;
+
+    -- 👑 7. Register user as owner
+    INSERT INTO company_admins (company_id, user_id, role)
+    VALUES (v_new_company_id, p_by_user_id, 2); -- role = owner
+
+    RETURN v_new_company_id;
+
+-- ⚠️ 8. Catch and return SQL errors
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Failed to create company: %', SQLERRM;
+END;
+$_$;
+
+
+ALTER FUNCTION public.add_company(p_by_user_id bigint, p_name text, p_website text, p_industry_id bigint, p_size smallint, p_founded_date date, p_location_id smallint) OWNER TO postgres;
 
 --
 -- Name: add_person(text, text, text, integer, date, integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1339,8 +1476,8 @@ CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
+    NEW.updated_at = NOW();
+    RETURN NEW;
 END;
 $$;
 
@@ -1396,6 +1533,66 @@ $$;
 
 
 ALTER FUNCTION public.update_user(p_user_id bigint, p_user_name text, p_phone_number text, p_email text, p_password_hash text, p_is_email_verified boolean, p_status smallint) OWNER TO postgres;
+
+--
+-- Name: user_active_companies_number(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_active_companies_number(p_user_id bigint) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN (
+        SELECT COUNT(*)
+        FROM company_admins ca
+		JOIN companies c ON ca.company_id = c.company_id
+        WHERE user_id = p_user_id
+		AND role = 2 AND c.status < 3
+    );
+END;
+$$;
+
+
+ALTER FUNCTION public.user_active_companies_number(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: user_companies_number(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_companies_number(p_user_id bigint) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN (
+        SELECT COUNT(*)
+        FROM company_admins
+        WHERE user_id = p_user_id
+		AND role = 2
+    );
+END;
+$$;
+
+
+ALTER FUNCTION public.user_companies_number(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: user_companies_number(uuid); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_companies_number(p_user_id uuid) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN (
+        SELECT COUNT(*)
+        FROM user_owned_companies
+        WHERE user_id = p_user_id
+    );
+END;
+$$;
+
+
+ALTER FUNCTION public.user_companies_number(p_user_id uuid) OWNER TO postgres;
 
 --
 -- Name: user_exists(bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1640,6 +1837,105 @@ CREATE VIEW public.chat_summaries_view AS
 
 
 ALTER VIEW public.chat_summaries_view OWNER TO postgres;
+
+--
+-- Name: companies; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.companies (
+    company_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying(255) NOT NULL,
+    industry_id bigint NOT NULL,
+    size smallint NOT NULL,
+    founded_date date NOT NULL,
+    website public.url_type,
+    contact_email character varying(150) NOT NULL,
+    location_id smallint NOT NULL,
+    description text,
+    logo_url public.url_type,
+    banner_url public.url_type,
+    remote_status smallint DEFAULT 0 NOT NULL,
+    status smallint DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT check_company_founded_date CHECK ((founded_date >= '1750-01-01'::date)),
+    CONSTRAINT companies_founded_date_check CHECK ((founded_date < CURRENT_DATE)),
+    CONSTRAINT companies_name_check CHECK ((TRIM(BOTH FROM name) <> ''::text)),
+    CONSTRAINT companies_remote_status_check CHECK (((remote_status >= 0) AND (remote_status <= 2))),
+    CONSTRAINT companies_size_check CHECK (((size >= 1) AND (size <= 8))),
+    CONSTRAINT companies_status_check CHECK ((status = ANY (ARRAY[0, 1, 2]))),
+    CONSTRAINT companies_website_check CHECK (((website IS NULL) OR (TRIM(BOTH FROM website) <> ''::text))),
+    CONSTRAINT company_status_check CHECK (((status >= 0) AND (status <= 5))),
+    CONSTRAINT valid_email CHECK (((contact_email)::text ~* '^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,10}$'::text))
+);
+
+
+ALTER TABLE public.companies OWNER TO postgres;
+
+--
+-- Name: TABLE companies; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.companies IS 'Stores information about various companies.';
+
+
+--
+-- Name: COLUMN companies.size; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.companies.size IS 'Size of the company (1: 1-10 |2: 11-50 |3: 51-200 |4: 201-500 |5: 501-1,000 |6: 1,001-5,000 |7: 5,001-10,000 |8: 10,001+).';
+
+
+--
+-- Name: COLUMN companies.remote_status; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.companies.remote_status IS 'Remote work status of the company (0=On-site, 1=Hybrid, 2=Fully Remote).';
+
+
+--
+-- Name: COLUMN companies.status; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.companies.status IS 'Company status:
+0 = unofficial (user email verified only),
+1 = official (fully approved),
+2 = semi-official (approved, awaiting final status),
+3 = pending application (e.g. second company),
+4 = rejected,
+5 = suspended.';
+
+
+--
+-- Name: company_admins; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.company_admins (
+    company_admin_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    company_id uuid NOT NULL,
+    user_id bigint NOT NULL,
+    role smallint NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT company_admins_role_check CHECK (((role >= 0) AND (role <= 2)))
+);
+
+
+ALTER TABLE public.company_admins OWNER TO postgres;
+
+--
+-- Name: TABLE company_admins; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE public.company_admins IS 'Maps users to companies with admin roles.';
+
+
+--
+-- Name: COLUMN company_admins.role; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.company_admins.role IS '0 = none, 1 = admin, 2 = owner';
+
 
 --
 -- Name: connections; Type: TABLE; Schema: public; Owner: postgres
@@ -2108,6 +2404,24 @@ ALTER SEQUENCE public.skills_skill_id_seq OWNED BY public.skills.skill_id;
 
 
 --
+-- Name: user_owned_companies_view; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.user_owned_companies_view AS
+ SELECT ca.user_id,
+    ca.company_id,
+    c.name,
+    c.website,
+    c.status,
+    c.logo_url
+   FROM (public.company_admins ca
+     JOIN public.companies c ON ((ca.company_id = c.company_id)))
+  WHERE (ca.role = 2);
+
+
+ALTER VIEW public.user_owned_companies_view OWNER TO postgres;
+
+--
 -- Name: user_profile_view; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -2343,6 +2657,26 @@ COPY public.chat_participants (chat_participant_id, chat_id, participant_id, cre
 --
 
 COPY public.chats (chat_id, created_at, last_update) FROM stdin;
+\.
+
+
+--
+-- Data for Name: companies; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.companies (company_id, name, industry_id, size, founded_date, website, contact_email, location_id, description, logo_url, banner_url, remote_status, status, created_at, updated_at) FROM stdin;
+cdd107ae-4f52-4598-8cf7-cceb88b2b2dd	TechNova Solutions	18	4	2005-06-15	https://technova.com	info@technova.com	33	Cloud software services.	https://cdn.technova.com/logo.png	https://cdn.technova.com/banner.jpg	2	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01
+5939f0a8-5ac5-45ec-96c0-34fb06705442	Green Earth Org	11	2	1980-03-12	\N	contact@greenearth.org	145	Sustainability consultants.	\N	\N	1	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01
+6988043a-6188-479c-9edb-86c2cd79f6e7	Someone Inc.	5	2	2005-03-14	https://something.com	someone@something.com	34	\N	\N	\N	0	0	2025-06-29 22:23:51.128093+01	2025-06-29 22:23:51.128093+01
+\.
+
+
+--
+-- Data for Name: company_admins; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.company_admins (company_admin_id, company_id, user_id, role, created_at, updated_at) FROM stdin;
+bb447e58-3df6-491a-b9e6-f2bc3d988e5c	6988043a-6188-479c-9edb-86c2cd79f6e7	3	2	2025-06-29 22:23:51.128093+01	2025-06-29 22:23:51.128093+01
 \.
 
 
@@ -2883,7 +3217,7 @@ COPY public.user_skills (user_skill_id, user_id, skill_id, profi_level, years_of
 
 COPY public.users (user_id, person_id, username, phone_number, email, is_email_verified, password_hash, status, last_login, created_at, updated_at) FROM stdin;
 1	1	user1	+1998982340	user1@email.com	f	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-08 06:21:22.735508	2025-06-08 06:21:22.735508	2025-06-08 06:21:22.735508
-3	9	user3	+12198403850	someone@something.com	f	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803
+3	9	user3	+12198403850	someone@something.com	t	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803
 \.
 
 
@@ -3030,6 +3364,46 @@ ALTER TABLE ONLY public.chat_participants
 
 ALTER TABLE ONLY public.chats
     ADD CONSTRAINT chats_pkey PRIMARY KEY (chat_id);
+
+
+--
+-- Name: companies companies_contact_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_contact_email_key UNIQUE (contact_email);
+
+
+--
+-- Name: companies companies_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_pkey PRIMARY KEY (company_id);
+
+
+--
+-- Name: companies companies_website_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_website_key UNIQUE (website);
+
+
+--
+-- Name: company_admins company_admins_company_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_admins
+    ADD CONSTRAINT company_admins_company_id_user_id_key UNIQUE (company_id, user_id);
+
+
+--
+-- Name: company_admins company_admins_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_admins
+    ADD CONSTRAINT company_admins_pkey PRIMARY KEY (company_admin_id);
 
 
 --
@@ -3284,6 +3658,34 @@ CREATE INDEX idx_chat_participants_participant_id ON public.chat_participants US
 
 
 --
+-- Name: idx_companies_location_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_companies_location_id ON public.companies USING btree (location_id);
+
+
+--
+-- Name: idx_companies_name; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_companies_name ON public.companies USING btree (name);
+
+
+--
+-- Name: idx_companies_remote_status; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_companies_remote_status ON public.companies USING btree (remote_status);
+
+
+--
+-- Name: idx_company_admins_company_id_user_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_company_admins_company_id_user_id ON public.company_admins USING btree (company_id, user_id);
+
+
+--
 -- Name: idx_connections_target_user_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -3431,6 +3833,20 @@ CREATE TRIGGER trg_check_years_of_exp BEFORE INSERT OR UPDATE ON public.user_ski
 
 
 --
+-- Name: companies update_companies_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON public.companies FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: company_admins update_company_admins_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER update_company_admins_updated_at BEFORE UPDATE ON public.company_admins FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: connections update_connection_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -3451,6 +3867,38 @@ ALTER TABLE ONLY public.chat_participants
 
 ALTER TABLE ONLY public.chat_participants
     ADD CONSTRAINT chat_participants_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: companies companies_industry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_industry_id_fkey FOREIGN KEY (industry_id) REFERENCES public.industries(industry_id);
+
+
+--
+-- Name: companies companies_location_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.countries(country_id);
+
+
+--
+-- Name: company_admins company_admins_company_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_admins
+    ADD CONSTRAINT company_admins_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(company_id) ON DELETE CASCADE;
+
+
+--
+-- Name: company_admins company_admins_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_admins
+    ADD CONSTRAINT company_admins_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 
 --

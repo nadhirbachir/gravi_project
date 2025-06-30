@@ -876,6 +876,31 @@ $$;
 ALTER PROCEDURE public.fully_approve_company(IN p_company_id uuid) OWNER TO postgres;
 
 --
+-- Name: get_company_admins(uuid); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_company_admins(p_company_id uuid) RETURNS TABLE(user_id bigint, role smallint, role_alias character varying, created_at timestamp with time zone)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT ca.user_id, ca.role,
+        CASE
+            WHEN ca.role = 1 THEN 'admin'
+            WHEN ca.role = 2 THEN 'owner'
+            ELSE 'no-role'
+        END::VARCHAR(150) AS role_alias,
+        ca.created_at
+    FROM company_admins ca
+    WHERE company_id = p_company_id
+    ORDER BY ca.created_at ASC;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_company_admins(p_company_id uuid) OWNER TO postgres;
+
+--
 -- Name: get_connections(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1097,6 +1122,77 @@ $$;
 ALTER FUNCTION public.get_user_chats(p_user_id bigint) OWNER TO postgres;
 
 --
+-- Name: give_ownership(uuid, bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.give_ownership(p_company_id uuid, p_user_id bigint) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	v_new_ownership UUID;
+BEGIN
+
+	IF user_exists(p_user_id) = -1 OR NOT EXISTS (SELECT 1 FROM companies WHERE company_id = p_company_id)
+	THEN RAISE EXCEPTION 'some of the provided data is invalid, either company_id or user_id';
+	END IF;
+
+    -- Ensure the user is an admin
+    UPDATE company_admins
+    SET role = 2
+    WHERE company_id = p_company_id AND user_id = p_user_id AND role = 1
+	RETURNING company_admin_id into v_new_ownership;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'User is not an admin and cannot be promoted.';
+    END IF;
+
+	RETURN v_new_ownership;
+
+	EXCEPTION
+	WHEN OTHERS THEN
+		RAISE EXCEPTION 'give_ownership error: %', SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.give_ownership(p_company_id uuid, p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: handle_owner_on_admin_delete(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.handle_owner_on_admin_delete() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_old_owner RECORD := OLD;
+    v_new_owner RECORD;
+BEGIN
+    -- Only run logic if the deleted user was an owner
+    IF v_old_owner.role <> 2 THEN RETURN OLD; END IF;
+
+    -- Try to find the oldest admin in that company
+    SELECT * INTO v_new_owner
+    FROM company_admins
+    WHERE company_id = v_old_owner.company_id AND role = 1
+    ORDER BY created_at ASC
+    LIMIT 1;
+
+    IF FOUND THEN
+        PERFORM give_ownership(v_old_owner.company_id, v_new_owner.user_id);
+    ELSE
+        -- No other admin: suspend the company
+        CALL suspend_company(v_old_owner.company_id);
+    END IF;
+
+    RETURN OLD;
+END;
+$$;
+
+
+ALTER FUNCTION public.handle_owner_on_admin_delete() OWNER TO postgres;
+
+--
 -- Name: is_followed_by(bigint, bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1312,6 +1408,25 @@ $$;
 ALTER FUNCTION public.send_message(p_chat_id uuid, p_sender_id bigint, p_content text, p_attachment_id uuid) OWNER TO postgres;
 
 --
+-- Name: set_previous_status_trigger(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.set_previous_status_trigger() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF NEW.status = 5 AND OLD.status != 5 THEN
+        NEW.previous_status := OLD.status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.set_previous_status_trigger() OWNER TO postgres;
+
+--
 -- Name: suspend_company(uuid); Type: PROCEDURE; Schema: public; Owner: postgres
 --
 
@@ -1319,6 +1434,11 @@ CREATE PROCEDURE public.suspend_company(IN p_company_id uuid)
     LANGUAGE plpgsql
     AS $$
 BEGIN
+
+	IF (SELECT status FROM companies WHERE company_id = p_company_id) = 5
+	THEN RAISE EXCEPTION 'cannot suspend a company that is already suspended';
+	END IF;
+
     UPDATE companies
     SET status = 5
     WHERE company_id = p_company_id;
@@ -1472,6 +1592,35 @@ $$;
 
 
 ALTER FUNCTION public.unfollow_user(follow_src bigint, follow_dst bigint) OWNER TO postgres;
+
+--
+-- Name: unsuspend_company(uuid); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE public.unsuspend_company(IN p_company_id uuid)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_prev_status SMALLINT;
+BEGIN
+    SELECT previous_status INTO v_prev_status
+    FROM companies
+    WHERE company_id = p_company_id AND status = 5;
+
+    IF v_prev_status IS NULL THEN
+        RAISE EXCEPTION 'Cannot unsuspend company: no previous status recorded.';
+    END IF;
+
+    UPDATE companies
+    SET status = v_prev_status,
+        previous_status = NULL,
+        updated_at = NOW()
+    WHERE company_id = p_company_id AND status = 5;
+END;
+$$;
+
+
+ALTER PROCEDURE public.unsuspend_company(IN p_company_id uuid) OWNER TO postgres;
 
 --
 -- Name: update_chat_last_update(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2003,14 +2152,16 @@ CREATE TABLE public.companies (
     status smallint DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
+    previous_status smallint,
     CONSTRAINT check_company_founded_date CHECK ((founded_date >= '1750-01-01'::date)),
     CONSTRAINT companies_founded_date_check CHECK ((founded_date < CURRENT_DATE)),
     CONSTRAINT companies_name_check CHECK ((TRIM(BOTH FROM name) <> ''::text)),
+    CONSTRAINT companies_previous_status_check CHECK (((previous_status >= 0) AND (previous_status <= 4))),
     CONSTRAINT companies_remote_status_check CHECK (((remote_status >= 0) AND (remote_status <= 2))),
     CONSTRAINT companies_size_check CHECK (((size >= 1) AND (size <= 8))),
-    CONSTRAINT companies_status_check CHECK ((status = ANY (ARRAY[0, 1, 2]))),
     CONSTRAINT companies_website_check CHECK (((website IS NULL) OR (TRIM(BOTH FROM website) <> ''::text))),
     CONSTRAINT company_status_check CHECK (((status >= 0) AND (status <= 5))),
+    CONSTRAINT previous_status_check CHECK ((((previous_status >= 0) AND (previous_status <= 4)) OR (previous_status IS NULL))),
     CONSTRAINT valid_email CHECK (((contact_email)::text ~* '^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,10}$'::text))
 );
 
@@ -2809,10 +2960,10 @@ COPY public.chats (chat_id, created_at, last_update) FROM stdin;
 -- Data for Name: companies; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.companies (company_id, name, industry_id, size, founded_date, website, contact_email, location_id, description, logo_url, banner_url, remote_status, status, created_at, updated_at) FROM stdin;
-cdd107ae-4f52-4598-8cf7-cceb88b2b2dd	TechNova Solutions	18	4	2005-06-15	https://technova.com	info@technova.com	33	Cloud software services.	https://cdn.technova.com/logo.png	https://cdn.technova.com/banner.jpg	2	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01
-5939f0a8-5ac5-45ec-96c0-34fb06705442	Green Earth Org	11	2	1980-03-12	\N	contact@greenearth.org	145	Sustainability consultants.	\N	\N	1	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01
-6988043a-6188-479c-9edb-86c2cd79f6e7	Someone Inc.	5	2	2005-03-14	https://something.com	someone@something.com	34	\N	\N	\N	0	1	2025-06-29 22:23:51.128093+01	2025-06-30 00:30:24.119575+01
+COPY public.companies (company_id, name, industry_id, size, founded_date, website, contact_email, location_id, description, logo_url, banner_url, remote_status, status, created_at, updated_at, previous_status) FROM stdin;
+5939f0a8-5ac5-45ec-96c0-34fb06705442	Green Earth Org	11	2	1980-03-12	\N	contact@greenearth.org	145	Sustainability consultants.	\N	\N	1	1	2025-06-29 19:51:18.245094+01	2025-06-29 19:51:18.245094+01	\N
+cdd107ae-4f52-4598-8cf7-cceb88b2b2dd	TechNova Solutions	18	4	2005-06-15	https://technova.com	info@technova.com	33	Cloud software services.	https://cdn.technova.com/logo.png	https://cdn.technova.com/banner.jpg	2	1	2025-06-29 19:51:18.245094+01	2025-06-30 18:31:32.677113+01	\N
+6988043a-6188-479c-9edb-86c2cd79f6e7	Someone Inc.	5	2	2005-03-14	https://something.com	someone@something.com	34	\N	\N	\N	0	5	2025-06-29 22:23:51.128093+01	2025-06-30 19:17:54.021632+01	1
 \.
 
 
@@ -2821,7 +2972,6 @@ cdd107ae-4f52-4598-8cf7-cceb88b2b2dd	TechNova Solutions	18	4	2005-06-15	https://
 --
 
 COPY public.company_admins (company_admin_id, company_id, user_id, role, created_at, updated_at) FROM stdin;
-bb447e58-3df6-491a-b9e6-f2bc3d988e5c	6988043a-6188-479c-9edb-86c2cd79f6e7	3	2	2025-06-29 22:23:51.128093+01	2025-06-29 22:23:51.128093+01
 \.
 
 
@@ -3943,6 +4093,13 @@ CREATE INDEX idx_users_username ON public.users USING btree (username);
 
 
 --
+-- Name: unique_single_owner_per_company; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX unique_single_owner_per_company ON public.company_admins USING btree (company_id) WHERE (role = 2);
+
+
+--
 -- Name: messages after_message_activity_update_chat_last_update; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -3971,10 +4128,24 @@ CREATE TRIGGER edu_mview_trg AFTER INSERT OR DELETE OR UPDATE ON public.educatio
 
 
 --
+-- Name: company_admins trg_check_owner_after_admin_delete; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER trg_check_owner_after_admin_delete AFTER DELETE ON public.company_admins FOR EACH ROW EXECUTE FUNCTION public.handle_owner_on_admin_delete();
+
+
+--
 -- Name: user_skills trg_check_years_of_exp; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
 CREATE TRIGGER trg_check_years_of_exp BEFORE INSERT OR UPDATE ON public.user_skills FOR EACH ROW EXECUTE FUNCTION public.check_years_of_exp();
+
+
+--
+-- Name: companies trg_set_previous_status; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER trg_set_previous_status BEFORE UPDATE ON public.companies FOR EACH ROW WHEN ((old.status <> new.status)) EXECUTE FUNCTION public.set_previous_status_trigger();
 
 
 --

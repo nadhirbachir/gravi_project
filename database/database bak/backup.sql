@@ -1209,6 +1209,31 @@ $_$;
 ALTER FUNCTION public.is_followed_by(followee_id bigint, follower_id bigint) OWNER TO postgres;
 
 --
+-- Name: is_user_company_owner(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.is_user_company_owner(p_user_id integer, p_company_id integer) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM company_admins
+        WHERE user_id = p_user_id
+          AND company_id = p_company_id
+          AND role = 2
+    ) THEN
+        RETURN 1;
+    ELSE
+        RETURN -1;
+    END IF;
+END;
+$$;
+
+
+ALTER FUNCTION public.is_user_company_owner(p_user_id integer, p_company_id integer) OWNER TO postgres;
+
+--
 -- Name: prevent_duplicate_or_reversed_connections(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1645,6 +1670,84 @@ $$;
 
 
 ALTER FUNCTION public.update_chat_last_update() OWNER TO postgres;
+
+--
+-- Name: update_company(bigint, uuid, text, text, text, bigint, smallint, date, smallint, text, public.url_type, public.url_type, smallint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_company(p_user_id bigint, p_company_id uuid, p_name text DEFAULT NULL::text, p_website text DEFAULT NULL::text, p_contact_email text DEFAULT NULL::text, p_industry_id bigint DEFAULT NULL::bigint, p_size smallint DEFAULT NULL::smallint, p_founded_date date DEFAULT NULL::date, p_location_id smallint DEFAULT NULL::smallint, p_description text DEFAULT NULL::text, p_logo_url public.url_type DEFAULT NULL::character varying, p_banner_url public.url_type DEFAULT NULL::character varying, p_remote_status smallint DEFAULT NULL::smallint) RETURNS integer
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+    v_user RECORD;
+    v_company RECORD;
+    v_email_domain TEXT;
+    v_website_domain TEXT;
+BEGIN
+    -- 🚫 1. Fetch current company info & validate status
+    SELECT * INTO v_company FROM companies WHERE company_id = p_company_id;
+    IF NOT FOUND THEN
+        RETURN -1;
+    END IF;
+
+    IF v_company.status IN (3, 4, 5) THEN
+        RAISE EXCEPTION 'Company cannot be updated in current status (%).', v_company.status;
+    END IF;
+
+    -- 👤 2. Check user existence
+    SELECT * INTO v_user FROM get_user_by_id(p_user_id);
+    IF NOT FOUND THEN
+        RETURN -1;
+    END IF;
+
+    IF v_user.email IS NULL OR NOT v_user.is_email_verified THEN
+        RAISE EXCEPTION 'User must have a verified email to update a company.';
+    END IF;
+
+    -- 🔐 3. Check ownership
+    IF is_user_owner(p_user_id, p_company_id) = -1 THEN
+        RETURN -1;
+    END IF;
+
+    -- 🌐 4. Website domain check if being updated AND company is not official (status ≠ 1)
+    IF p_website IS NOT NULL AND v_company.status <> 1 THEN
+        v_email_domain := lower(split_part(v_user.email, '@', 2));
+        v_website_domain := lower(regexp_replace(p_website, '^https?://(www\.)?|/.*$', '', 'gi'));
+
+        IF v_email_domain IS NULL OR v_website_domain IS NULL OR v_email_domain <> v_website_domain THEN
+            RAISE EXCEPTION 'Email domain (%) does not match website domain (%). Request approval needed.', v_email_domain, v_website_domain;
+        END IF;
+    END IF;
+
+    -- 🛠️ 5. Perform update using COALESCE (preserve values if NULL or blank)
+    UPDATE public.companies
+    SET
+        name = COALESCE(NULLIF(TRIM(p_name), ''), v_company.name),
+        website = COALESCE(NULLIF(TRIM(p_website), ''), v_company.website),
+        contact_email = COALESCE(NULLIF(TRIM(p_contact_email), ''), v_company.contact_email),
+        industry_id = COALESCE(p_industry_id, v_company.industry_id),
+        size = COALESCE(p_size, v_company.size),
+        founded_date = COALESCE(p_founded_date, v_company.founded_date),
+        location_id = COALESCE(p_location_id, v_company.location_id),
+        description = COALESCE(NULLIF(TRIM(p_description), ''), v_company.description),
+        logo_url = COALESCE(NULLIF(TRIM(p_logo_url::text), '')::url_type, v_company.logo_url),
+        banner_url = COALESCE(NULLIF(TRIM(p_banner_url::text), '')::url_type, v_company.banner_url),
+        remote_status = COALESCE(p_remote_status, v_company.remote_status),
+        updated_at = now()
+    WHERE company_id = p_company_id;
+
+    RETURN 1;
+
+-- ⚠️ 6. Catch and raise errors with context
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'update_company: %', SQLERRM;
+        RETURN -1;
+END;
+$_$;
+
+
+ALTER FUNCTION public.update_company(p_user_id bigint, p_company_id uuid, p_name text, p_website text, p_contact_email text, p_industry_id bigint, p_size smallint, p_founded_date date, p_location_id smallint, p_description text, p_logo_url public.url_type, p_banner_url public.url_type, p_remote_status smallint) OWNER TO postgres;
 
 --
 -- Name: update_person(bigint, text, text, text, integer, date, integer); Type: FUNCTION; Schema: public; Owner: postgres

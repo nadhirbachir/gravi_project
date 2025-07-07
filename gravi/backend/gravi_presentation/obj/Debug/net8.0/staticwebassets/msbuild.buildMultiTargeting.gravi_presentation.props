@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\gravi_presentation.props" />
+</Project>

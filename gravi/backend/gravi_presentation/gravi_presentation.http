@@ -1,0 +1,6 @@
+@gravi_presentation_HostAddress = http://localhost:5022
+
+GET {{gravi_presentation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

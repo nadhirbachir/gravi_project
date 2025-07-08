@@ -4,19 +4,6 @@
     "title": "gravi_presentation",
     "version": "1.0"
   },
-  "paths": {
-    "/hello-get-something": {
-      "get": {
-        "tags": [
-          "Home"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    }
-  },
+  "paths": { },
   "components": { }
 }

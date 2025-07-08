@@ -9,10 +9,11 @@ using gravi_infrastructure.Data.ConnectionFactories;
 using System.Data.Common;
 using System.Data;
 using Microsoft.Extensions.Logging.Console;
+using gravi_infrastructure.Data.UnitOfWork;
 
 namespace gravi_presentation
 {
-    public class StartUp
+    public class Startup
     {
         // This method replaces Startup.ConfigureServices
         public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -28,7 +29,10 @@ namespace gravi_presentation
             // Only one instance will be created for the entire application lifetime.
             // It automatically resolves IConfiguration and ILogger<DbConnection>.
             services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
-            
+
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUnitOfWorkAsync, UnitOfWork>();
+
         }
 
         // This method replaces Startup.Configure

@@ -9,3 +9,14 @@ C:\Users\Nadir\Desktop\Project\gravi_application\obj\Debug\net8.0\gravi_applicat
 C:\Users\Nadir\Desktop\Project\gravi_application\obj\Debug\net8.0\refint\gravi_application.dll
 C:\Users\Nadir\Desktop\Project\gravi_application\obj\Debug\net8.0\gravi_application.pdb
 C:\Users\Nadir\Desktop\Project\gravi_application\obj\Debug\net8.0\ref\gravi_application.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_application.deps.json
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_application.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_application.pdb
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.AssemblyInfoInputs.cache
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.AssemblyInfo.cs
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.csproj.CoreCompileInputs.cache
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\refint\gravi_application.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.pdb
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\ref\gravi_application.dll

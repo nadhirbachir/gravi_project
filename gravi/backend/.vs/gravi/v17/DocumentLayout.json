@@ -1,30 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Nadir\\Desktop\\Project\\",
+  "WorkspaceRootPath": "C:\\Users\\Nadir\\Desktop\\backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\project\\gravi_infrastructure\\data\\connectionfactories\\npgsqlconnectionfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\data\\connectionfactories\\npgsqlconnectionfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\project\\gravi_presentation\\startup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_presentation\\startup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|solutionrelative:gravi_presentation\\startup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\project\\gravi_presentation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_presentation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|solutionrelative:gravi_presentation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\project\\gravi_infrastructure\\data\\interfaces\\idbconnectionfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\data\\interfaces\\idbconnectionfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\project\\gravi_infrastructure\\data\\extensions\\dbtransactionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\data\\extensions\\dbtransactionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\project\\gravi_infrastructure\\data\\extensions\\dbconnectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\data\\extensions\\dbconnectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,7 +18,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,80 +30,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\Program.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Program.cs",
               "RelativeDocumentMoniker": "gravi_presentation\\Program.cs",
-              "ToolTip": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\Program.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Program.cs",
               "RelativeToolTip": "gravi_presentation\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAPAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-07T19:45:49.158Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "StartUp.cs",
-              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\StartUp.cs",
-              "RelativeDocumentMoniker": "gravi_presentation\\StartUp.cs",
-              "ToolTip": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\StartUp.cs",
-              "RelativeToolTip": "gravi_presentation\\StartUp.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAACAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "Startup.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Startup.cs",
+              "RelativeDocumentMoniker": "gravi_presentation\\Startup.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Startup.cs",
+              "RelativeToolTip": "gravi_presentation\\Startup.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAACEAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-07T19:36:14.295Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "NpgsqlConnectionFactory.cs",
-              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\ConnectionFactories\\NpgsqlConnectionFactory.cs",
-              "RelativeDocumentMoniker": "gravi_infrastructure\\Data\\ConnectionFactories\\NpgsqlConnectionFactory.cs",
-              "ToolTip": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\ConnectionFactories\\NpgsqlConnectionFactory.cs",
-              "RelativeToolTip": "gravi_infrastructure\\Data\\ConnectionFactories\\NpgsqlConnectionFactory.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAAAB8AAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-07T19:09:16.77Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "DbTransactionExtensions.cs",
-              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\Extensions\\DbTransactionExtensions.cs",
-              "RelativeDocumentMoniker": "gravi_infrastructure\\Data\\Extensions\\DbTransactionExtensions.cs",
-              "ToolTip": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\Extensions\\DbTransactionExtensions.cs",
-              "RelativeToolTip": "gravi_infrastructure\\Data\\Extensions\\DbTransactionExtensions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADYAAABRAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-07T18:38:32.78Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "DbConnectionExtensions.cs",
-              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\Extensions\\DbConnectionExtensions.cs",
-              "RelativeDocumentMoniker": "gravi_infrastructure\\Data\\Extensions\\DbConnectionExtensions.cs",
-              "ToolTip": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\Extensions\\DbConnectionExtensions.cs",
-              "RelativeToolTip": "gravi_infrastructure\\Data\\Extensions\\DbConnectionExtensions.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAAqwB4AAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-07T18:38:09.455Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "IDbConnectionFactory.cs",
-              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\Interfaces\\IDbConnectionFactory.cs",
-              "RelativeDocumentMoniker": "gravi_infrastructure\\Data\\Interfaces\\IDbConnectionFactory.cs",
-              "ToolTip": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\Data\\Interfaces\\IDbConnectionFactory.cs",
-              "RelativeToolTip": "gravi_infrastructure\\Data\\Interfaces\\IDbConnectionFactory.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-07T18:36:34.147Z",
               "EditorCaption": ""
             }
           ]

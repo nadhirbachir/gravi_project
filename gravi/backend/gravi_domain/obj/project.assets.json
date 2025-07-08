@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj",
+      "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj",
       "projectName": "gravi_domain",
-      "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj",
+      "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj",
       "packagesPath": "C:\\Users\\Nadir\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\obj\\",
+      "outputPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

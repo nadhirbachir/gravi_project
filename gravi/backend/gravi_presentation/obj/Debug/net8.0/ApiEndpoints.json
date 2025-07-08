@@ -1,12 +1,1 @@
-[
-  {
-    "ContainingType": "gravi_presentation.Controllers.HomeController",
-    "Method": "getsomething",
-    "RelativePath": "hello-get-something",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  }
-]
+[]

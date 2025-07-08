@@ -3028,11 +3028,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj",
+      "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj",
       "projectName": "gravi_infrastructure",
-      "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj",
+      "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj",
       "packagesPath": "C:\\Users\\Nadir\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\obj\\",
+      "outputPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -10,6 +10,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.Common;
 
 namespace gravi_infrastructure.Data.ConnectionFactories
 {
@@ -44,7 +45,7 @@ namespace gravi_infrastructure.Data.ConnectionFactories
         /// </summary>
         /// <returns>A new <see cref="IDbConnection"/> instance for PostgreSQL.</returns>
         /// <exception cref="Exception">Catches and re-throws any exceptions that occur during connection creation, logging the error.</exception>
-        public IDbConnection CreateConnection()
+        public DbConnection CreateConnection()
         {
             try
             {

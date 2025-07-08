@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\gravi_presentation.csproj": {}
+    "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\gravi_presentation.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Nadir\\Desktop\\Project\\gravi_application\\gravi_application.csproj": {
+    "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\gravi_application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_application\\gravi_application.csproj",
+        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\gravi_application.csproj",
         "projectName": "gravi_application",
-        "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_application\\gravi_application.csproj",
+        "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\gravi_application.csproj",
         "packagesPath": "C:\\Users\\Nadir\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_application\\obj\\",
+        "outputPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -83,14 +83,14 @@
         }
       }
     },
-    "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj": {
+    "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj",
+        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj",
         "projectName": "gravi_domain",
-        "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj",
+        "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj",
         "packagesPath": "C:\\Users\\Nadir\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\obj\\",
+        "outputPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -162,14 +162,14 @@
         }
       }
     },
-    "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj": {
+    "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj",
         "projectName": "gravi_infrastructure",
-        "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj",
+        "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj",
         "packagesPath": "C:\\Users\\Nadir\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\obj\\",
+        "outputPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -259,14 +259,14 @@
         }
       }
     },
-    "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\gravi_presentation.csproj": {
+    "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\gravi_presentation.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\gravi_presentation.csproj",
+        "projectUniqueName": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\gravi_presentation.csproj",
         "projectName": "gravi_presentation",
-        "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\gravi_presentation.csproj",
+        "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\gravi_presentation.csproj",
         "packagesPath": "C:\\Users\\Nadir\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\obj\\",
+        "outputPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -287,14 +287,14 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Nadir\\Desktop\\Project\\gravi_application\\gravi_application.csproj": {
-                "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_application\\gravi_application.csproj"
+              "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\gravi_application.csproj": {
+                "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\gravi_application.csproj"
               },
-              "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj": {
-                "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_domain\\gravi_domain.csproj"
+              "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj": {
+                "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj"
               },
-              "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj": {
-                "projectPath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_infrastructure\\gravi_infrastructure.csproj"
+              "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj": {
+                "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\gravi_infrastructure.csproj"
               }
             }
           }

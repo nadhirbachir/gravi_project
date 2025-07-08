@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/JqF4VthtZs=",
+  "dgSpecHash": "/x5zhQOTjf0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Nadir\\Desktop\\Project\\gravi_presentation\\gravi_presentation.csproj",
+  "projectFilePath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\gravi_presentation.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Nadir\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Nadir\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

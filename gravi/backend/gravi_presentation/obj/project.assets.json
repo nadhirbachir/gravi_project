@@ -1287,7 +1287,8 @@
           "Microsoft.Data.SqlClient": "6.0.2",
           "Microsoft.Extensions.Configuration": "9.0.6",
           "MySql.Data": "9.3.0",
-          "Npgsql": "9.0.3"
+          "Npgsql": "9.0.3",
+          "gravi_domain": "1.0.0"
         },
         "compile": {
           "bin/placeholder/gravi_infrastructure.dll": {}

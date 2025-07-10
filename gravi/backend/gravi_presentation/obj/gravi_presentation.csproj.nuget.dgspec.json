@@ -189,7 +189,11 @@
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
-            "projectReferences": {}
+            "projectReferences": {
+              "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj": {
+                "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj"
+              }
+            }
           }
         },
         "warningProperties": {

@@ -14,8 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Extensions\" />
-    <Folder Include="Repositories\" />
+    <ProjectReference Include="..\gravi_domain\gravi_domain.csproj" />
   </ItemGroup>
 
 </Project>

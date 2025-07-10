@@ -1039,6 +1039,16 @@
         "runtime": {
           "lib/net8.0/ZstdSharp.dll": {}
         }
+      },
+      "gravi_domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/gravi_domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/gravi_domain.dll": {}
+        }
       }
     }
   },
@@ -3011,6 +3021,11 @@
         "zstdsharp.port.0.8.5.nupkg.sha512",
         "zstdsharp.port.nuspec"
       ]
+    },
+    "gravi_domain/1.0.0": {
+      "type": "project",
+      "path": "../gravi_domain/gravi_domain.csproj",
+      "msbuildProject": "../gravi_domain/gravi_domain.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -3018,7 +3033,8 @@
       "Microsoft.Data.SqlClient >= 6.0.2",
       "Microsoft.Extensions.Configuration >= 9.0.6",
       "MySql.Data >= 9.3.0",
-      "Npgsql >= 9.0.3"
+      "Npgsql >= 9.0.3",
+      "gravi_domain >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -3052,7 +3068,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj": {
+              "projectPath": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\gravi_domain.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

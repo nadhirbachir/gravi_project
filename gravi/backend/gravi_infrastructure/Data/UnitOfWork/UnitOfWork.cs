@@ -1,4 +1,5 @@
 ﻿using gravi_infrastructure.Data.Interfaces;
+using gravi_infrastructure.Data.UnitOfWork.RepositoryRegisters;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,6 +15,7 @@ namespace gravi_infrastructure.Data.UnitOfWork
         private readonly IDbConnectionFactory _connectionFactory;
         private DbConnection _connection;
         private DbTransaction _transaction;
+        private IRepositoryRegistry _registry;
 
         public UnitOfWork(IDbConnectionFactory connectionFactory)
         {
@@ -34,6 +36,8 @@ namespace gravi_infrastructure.Data.UnitOfWork
         }
 
         public IDbTransaction Transaction => _transaction;
+
+        public IRepositoryRegistry Registry => (_registry ??= new NpgsqlRepositoryRegistry(_connection, _transaction));
 
         public void BeginTransaction()
         {

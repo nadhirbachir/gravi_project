@@ -11,7 +11,8 @@
           "Microsoft.Data.SqlClient": "6.0.2",
           "Microsoft.Extensions.Configuration": "9.0.6",
           "MySql.Data": "9.3.0",
-          "Npgsql": "9.0.3"
+          "Npgsql": "9.0.3",
+          "gravi_domain": "1.0.0"
         },
         "runtime": {
           "gravi_infrastructure.dll": {}
@@ -676,6 +677,14 @@
             "fileVersion": "0.8.5.0"
           }
         }
+      },
+      "gravi_domain/1.0.0": {
+        "runtime": {
+          "gravi_domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -1097,6 +1106,11 @@
       "sha512": "sha512-TR4j17WeVSEb3ncgL2NqlXEqcy04I+Kk9CaebNDplUeL8XOgjkZ7fP4Wg4grBdPLIqsV86p2QaXTkZoRMVOsew==",
       "path": "zstdsharp.port/0.8.5",
       "hashPath": "zstdsharp.port.0.8.5.nupkg.sha512"
+    },
+    "gravi_domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

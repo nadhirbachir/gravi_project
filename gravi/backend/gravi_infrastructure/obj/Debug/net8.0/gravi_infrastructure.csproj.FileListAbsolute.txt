@@ -22,3 +22,6 @@ C:\Users\Nadir\Desktop\backend\gravi_infrastructure\obj\Debug\net8.0\gravi_infra
 C:\Users\Nadir\Desktop\backend\gravi_infrastructure\obj\Debug\net8.0\refint\gravi_infrastructure.dll
 C:\Users\Nadir\Desktop\backend\gravi_infrastructure\obj\Debug\net8.0\gravi_infrastructure.pdb
 C:\Users\Nadir\Desktop\backend\gravi_infrastructure\obj\Debug\net8.0\ref\gravi_infrastructure.dll
+C:\Users\Nadir\Desktop\backend\gravi_infrastructure\bin\Debug\net8.0\gravi_domain.dll
+C:\Users\Nadir\Desktop\backend\gravi_infrastructure\bin\Debug\net8.0\gravi_domain.pdb
+C:\Users\Nadir\Desktop\backend\gravi_infrastructure\obj\Debug\net8.0\gravi_in.12A4A089.Up2Date

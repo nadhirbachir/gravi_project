@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace gravi_infrastructure.Data.UnitOfWork
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork : IDisposable
     {
-        IDbConnection Connection { get; }
-        IDbTransaction? Transaction { get; }
+        DbConnection Connection { get; }
+        DbTransaction? Transaction { get; }
         void BeginTransaction();
         void Commit();
         void RollBack();
-        void Dispose();
+        new void Dispose();
     }
 }

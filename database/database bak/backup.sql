@@ -599,20 +599,24 @@ $$;
 ALTER FUNCTION public.delete_person(p_person_id bigint) OWNER TO postgres;
 
 --
--- Name: delete_user(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: delete_user(bigint, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.delete_user(p_user_id bigint) RETURNS integer
+CREATE FUNCTION public.delete_user(p_user_id bigint, p_password_hash text) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
+	v_person_id BIGINT;
     delete_count INTEGER;
 BEGIN
     -- Check if user exists
-    IF NOT EXISTS(SELECT 1 FROM users WHERE user_id = p_user_id) THEN RETURN -1; END IF;
+    SELECT u.person_id INTO v_person_id FROM users u WHERE u.user_id = p_user_id AND u.password_hash = p_password_hash;
+
+	IF v_person_id IS NULL OR NOT EXISTS (SELECT 1 FROM people p WHERE p.person_id = v_person_id)
+	THEN RETURN -1; END IF;
 
     BEGIN
-        DELETE FROM users WHERE user_id = p_user_id;
+        DELETE FROM people p WHERE p.person_id = v_person_id;
         
         GET DIAGNOSTICS delete_count = ROW_COUNT;
         
@@ -633,7 +637,7 @@ END;
 $$;
 
 
-ALTER FUNCTION public.delete_user(p_user_id bigint) OWNER TO postgres;
+ALTER FUNCTION public.delete_user(p_user_id bigint, p_password_hash text) OWNER TO postgres;
 
 --
 -- Name: edu_mview_changes_trgfun(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -942,6 +946,62 @@ $$;
 
 
 ALTER FUNCTION public.get_connections(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: get_country_by_id(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_country_by_id(p_id integer) RETURNS TABLE(country_id integer, name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+
+    IF p_id IS NULL OR p_id < 0 THEN
+        RETURN; 
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.country_id,
+        c.name
+    FROM
+        countries c
+    WHERE
+        c.country_id = p_id;
+
+END;
+$$;
+
+
+ALTER FUNCTION public.get_country_by_id(p_id integer) OWNER TO postgres;
+
+--
+-- Name: get_country_by_name(text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_country_by_name(p_name text) RETURNS TABLE(country_id integer, name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Input validation: Check for NULL, empty, or overly long input
+    IF p_name IS NULL OR TRIM(p_name) = '' OR LENGTH(TRIM(p_name)) > 128 THEN
+        RETURN; 
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        c.country_id,
+        c.name
+    FROM
+        countries c
+    WHERE
+        c.name ILIKE TRIM(p_name);
+
+END;
+$$;
+
+
+ALTER FUNCTION public.get_country_by_name(p_name text) OWNER TO postgres;
 
 --
 -- Name: get_followers(bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -3679,7 +3739,7 @@ SELECT pg_catalog.setval('public.learning_modes_learning_mode_id_seq', 6, true);
 -- Name: people_person_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.people_person_id_seq', 9, true);
+SELECT pg_catalog.setval('public.people_person_id_seq', 12, true);
 
 
 --
@@ -3721,7 +3781,7 @@ SELECT pg_catalog.setval('public.user_skills_user_skill_id_seq', 6, true);
 -- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_user_id_seq', 3, true);
+SELECT pg_catalog.setval('public.users_user_id_seq', 8, true);
 
 
 --

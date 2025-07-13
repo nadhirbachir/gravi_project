@@ -1,5 +1,6 @@
 ﻿using gravi_infrastructure.Data.Interfaces;
 using gravi_infrastructure.Data.UnitOfWork.RepositoryRegisters;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,15 +15,17 @@ namespace gravi_infrastructure.Data.UnitOfWork
     {
         private readonly IDbConnectionFactory _connectionFactory;
         private DbConnection _connection;
-        private DbTransaction _transaction;
+        private DbTransaction? _transaction;
+        private ILoggerFactory _loggerFactory;
         private IRepositoryRegistry _registry;
 
-        public UnitOfWork(IDbConnectionFactory connectionFactory)
+        public UnitOfWork(IDbConnectionFactory connectionFactory, ILoggerFactory loggerFactory)
         {
-            _connectionFactory = connectionFactory ?? throw new ArgumentNullException("connection factory can't be null");
+            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory), "connection factory can't be null");
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory), "Logger factory can't be null");
         }
 
-        public IDbConnection Connection
+        public DbConnection Connection
         {
             get
             {
@@ -35,9 +38,9 @@ namespace gravi_infrastructure.Data.UnitOfWork
             }
         }
 
-        public IDbTransaction Transaction => _transaction;
+        public DbTransaction? Transaction => _transaction;
 
-        public IRepositoryRegistry Registry => (_registry ??= new NpgsqlRepositoryRegistry(_connection, _transaction));
+        public IRepositoryRegistry Registry => (_registry ??= new NpgsqlRepositoryRegistry(Connection, Transaction, _loggerFactory));
 
         public void BeginTransaction()
         {
@@ -127,7 +130,7 @@ namespace gravi_infrastructure.Data.UnitOfWork
 
         public async Task DisposeAsync()
         {
-            if (_connection != null)
+            if (_transaction != null)
                 await _transaction.DisposeAsync();
 
             _transaction = null;

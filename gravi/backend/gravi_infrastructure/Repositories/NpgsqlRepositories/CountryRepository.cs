@@ -8,25 +8,26 @@ using gravi_domain.Entities;
 using gravi_domain.Interfaces;
 using gravi_infrastructure.Data.Extensions;
 using gravi_infrastructure.Repositories.Base;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace gravi_infrastructure.Repositories.NpgsqlRepositories
 {
-    public class CountryRepository : NpgsqlRepositoryBase, ICountryRepository
+    public class CountryRepository : NpgsqlRepositoryBase<CountryRepository>, ICountryRepository
     {
-        public CountryRepository(NpgsqlConnection connection, NpgsqlTransaction? transaction) : base(connection, transaction) { }
+        public CountryRepository(DbConnection connection, DbTransaction? transaction, ILogger<CountryRepository> logger) : base(connection, transaction, logger) { }
 
         public async Task<Country?> FindByName(string name)
         {
-            string sql = "SELECT * FROM get_country_by_name(@name);";
-            var cmd = new NpgsqlCommand(sql, Connection, Transaction);
-            cmd.Parameters.AddWithValue("name", name);
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if(await reader.ReadAsync())
+            const string sql = "SELECT * FROM get_country_by_name(@name);";
+
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
             {
-                return MapCountryFromReader(reader);
-            }
-            return null;
+                Parameters = { new NpgsqlParameter("name", name) }
+            };
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? MapCountryFromReader(reader) : null;
         }
 
         public async Task<Country?> FindById(int id)

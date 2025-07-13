@@ -9,6 +9,7 @@ namespace gravi_domain.Entities
 {
     public class User
     {
+        public enum UserStatus { Active = 0, InActive = 1, Suspended = 2 };
         public long? UserId { get; init; }
         public required Person Person { get; set; }
 
@@ -17,9 +18,9 @@ namespace gravi_domain.Entities
         public string? PhoneNumber { get; set; }
         [EmailAddress(ErrorMessage = "Invalid email address.")]
         public required string Email { get; set; }
-        public required bool IsEmailVerified { get; set; } = false;
-        public required string Password { get; set; }
-        public required short Status { get; set; }
+        public bool IsEmailVerified { get; set; } = false;
+        public required string PasswordHash { get; set; }
+        public required UserStatus Status { get; set; }
 
     }
 }

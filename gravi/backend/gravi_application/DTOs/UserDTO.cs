@@ -1,0 +1,22 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace gravi_application.DTOs
+{
+    public class UserDTO
+    {
+        public long? UserId { get; init; }
+        public required PersonDTO Person { get; set; }
+
+        [Length(2, 50, ErrorMessage = "Length need to be in the range of 2-50 characters only.")]
+        public required string Username { get; set; }
+        public string? PhoneNumber { get; set; }
+        [EmailAddress(ErrorMessage = "Invalid email address.")]
+        public required string Email { get; set; }
+        public required bool IsEmailVerified { get; set; } = false;
+    }
+}

@@ -219,12 +219,6 @@ C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\scopedcss\bun
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets\msbuild.gravi_presentation.Microsoft.AspNetCore.StaticWebAssets.props
-C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets\msbuild.gravi_presentation.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
-C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets\msbuild.build.gravi_presentation.props
-C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.gravi_presentation.props
-C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.gravi_presentation.props
-C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.pack.json
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\gravi_pr.D23D75DD.Up2Date
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\gravi_presentation.dll
@@ -232,3 +226,9 @@ C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\refint\gravi_
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\gravi_presentation.pdb
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\gravi_presentation.genruntimeconfig.cache
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\ref\gravi_presentation.dll
+C:\Users\Nadir\Desktop\backend\gravi_presentation\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.build.json.cache

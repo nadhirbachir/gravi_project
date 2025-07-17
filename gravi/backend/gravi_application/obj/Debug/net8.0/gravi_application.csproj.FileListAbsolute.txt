@@ -20,3 +20,9 @@ C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_applicat
 C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\refint\gravi_application.dll
 C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.pdb
 C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\ref\gravi_application.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_domain.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_infrastructure.dll
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_infrastructure.pdb
+C:\Users\Nadir\Desktop\backend\gravi_application\bin\Debug\net8.0\gravi_domain.pdb
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_application.csproj.AssemblyReference.cache
+C:\Users\Nadir\Desktop\backend\gravi_application\obj\Debug\net8.0\gravi_ap.4DAE907B.Up2Date

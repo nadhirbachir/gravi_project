@@ -3,16 +3,72 @@
   "WorkspaceRootPath": "C:\\Users\\Nadir\\Desktop\\backend\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\mappings\\countryprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\mappings\\countryprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\mappings\\userprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\mappings\\userprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\interfaces\\icountryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\interfaces\\icountryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_infrastructure\\repositories\\npgsqlrepositories\\countryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\repositories\\npgsqlrepositories\\countryrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_presentation\\controllers\\testcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|solutionrelative:gravi_presentation\\controllers\\testcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\services\\countryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\services\\countryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_presentation\\startupextensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|solutionrelative:gravi_presentation\\startupextensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_presentation\\startup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|solutionrelative:gravi_presentation\\startup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_presentation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B0A1E5FD-34F6-4F8F-8078-D6AA2E849EFF}|gravi_presentation\\gravi_presentation.csproj|solutionrelative:gravi_presentation\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{2178C2DE-BBBE-4D65-9255-46C5ED7B440A}|gravi_domain\\gravi_domain.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2178C2DE-BBBE-4D65-9255-46C5ED7B440A}|gravi_domain\\gravi_domain.csproj|solutionrelative:gravi_domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2178C2DE-BBBE-4D65-9255-46C5ED7B440A}|gravi_domain\\gravi_domain.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_domain\\entities\\person.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2178C2DE-BBBE-4D65-9255-46C5ED7B440A}|gravi_domain\\gravi_domain.csproj|solutionrelative:gravi_domain\\entities\\person.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_infrastructure\\data\\unitofwork\\iunitofworkasync.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\data\\unitofwork\\iunitofworkasync.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_infrastructure\\data\\unitofwork\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A10098D-A77B-4AE7-8960-1799E3599641}|gravi_infrastructure\\gravi_infrastructure.csproj|solutionrelative:gravi_infrastructure\\data\\unitofwork\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\dtos\\persondto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\dtos\\persondto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\dtos\\adduserdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\dtos\\adduserdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_application\\dtos\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28FFC288-EA38-45E3-A247-EFC8DCCBD7B4}|gravi_application\\gravi_application.csproj|solutionrelative:gravi_application\\dtos\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2178C2DE-BBBE-4D65-9255-46C5ED7B440A}|gravi_domain\\gravi_domain.csproj|c:\\users\\nadir\\desktop\\backend\\gravi_domain\\entities\\person.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2178C2DE-BBBE-4D65-9255-46C5ED7B440A}|gravi_domain\\gravi_domain.csproj|solutionrelative:gravi_domain\\entities\\person.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,11 +78,201 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 5,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "UserProfile.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Mappings\\UserProfile.cs",
+              "RelativeDocumentMoniker": "gravi_application\\Mappings\\UserProfile.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Mappings\\UserProfile.cs",
+              "RelativeToolTip": "gravi_application\\Mappings\\UserProfile.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T21:06:27.569Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TestController.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Controllers\\TestController.cs",
+              "RelativeDocumentMoniker": "gravi_presentation\\Controllers\\TestController.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Controllers\\TestController.cs",
+              "RelativeToolTip": "gravi_presentation\\Controllers\\TestController.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAADwvzIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T19:17:44.623Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ServiceCollectionExtensions.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\StartupExtensions\\ServiceCollectionExtensions.cs",
+              "RelativeDocumentMoniker": "gravi_presentation\\StartupExtensions\\ServiceCollectionExtensions.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\StartupExtensions\\ServiceCollectionExtensions.cs",
+              "RelativeToolTip": "gravi_presentation\\StartupExtensions\\ServiceCollectionExtensions.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T18:50:25.681Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "CountryProfile.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Mappings\\CountryProfile.cs",
+              "RelativeDocumentMoniker": "gravi_application\\Mappings\\CountryProfile.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Mappings\\CountryProfile.cs",
+              "RelativeToolTip": "gravi_application\\Mappings\\CountryProfile.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T09:52:15.313Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Startup.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Startup.cs",
+              "RelativeDocumentMoniker": "gravi_presentation\\Startup.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Startup.cs",
+              "RelativeToolTip": "gravi_presentation\\Startup.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T09:13:19.469Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Program.cs",
+              "RelativeDocumentMoniker": "gravi_presentation\\Program.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_presentation\\Program.cs",
+              "RelativeToolTip": "gravi_presentation\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T09:02:11.333Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CountryRepository.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\Repositories\\NpgsqlRepositories\\CountryRepository.cs",
+              "RelativeDocumentMoniker": "gravi_infrastructure\\Repositories\\NpgsqlRepositories\\CountryRepository.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\Repositories\\NpgsqlRepositories\\CountryRepository.cs",
+              "RelativeToolTip": "gravi_infrastructure\\Repositories\\NpgsqlRepositories\\CountryRepository.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAA8AAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T08:54:20.989Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "IUnitOfWorkAsync.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWorkAsync.cs",
+              "RelativeDocumentMoniker": "gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWorkAsync.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWorkAsync.cs",
+              "RelativeToolTip": "gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWorkAsync.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T08:53:19.05Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "IUnitOfWork.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWork.cs",
+              "RelativeDocumentMoniker": "gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWork.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWork.cs",
+              "RelativeToolTip": "gravi_infrastructure\\Data\\UnitOfWork\\IUnitOfWork.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T08:52:42.752Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CountryService.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Services\\CountryService.cs",
+              "RelativeDocumentMoniker": "gravi_application\\Services\\CountryService.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Services\\CountryService.cs",
+              "RelativeToolTip": "gravi_application\\Services\\CountryService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABkAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T08:46:28.383Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "IUserService.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Interfaces\\IUserService.cs",
+              "RelativeDocumentMoniker": "gravi_application\\Interfaces\\IUserService.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Interfaces\\IUserService.cs",
+              "RelativeToolTip": "gravi_application\\Interfaces\\IUserService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T08:45:58.154Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ICountryService.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Interfaces\\ICountryService.cs",
+              "RelativeDocumentMoniker": "gravi_application\\Interfaces\\ICountryService.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\Interfaces\\ICountryService.cs",
+              "RelativeToolTip": "gravi_application\\Interfaces\\ICountryService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T08:45:35.644Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "UserDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\DTOs\\UserDTO.cs",
+              "RelativeDocumentMoniker": "gravi_application\\DTOs\\UserDTO.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\DTOs\\UserDTO.cs",
+              "RelativeToolTip": "gravi_application\\DTOs\\UserDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T03:10:44.514Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "AddUserDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\DTOs\\AddUserDTO.cs",
+              "RelativeDocumentMoniker": "gravi_application\\DTOs\\AddUserDTO.cs",
+              "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\DTOs\\AddUserDTO.cs",
+              "RelativeToolTip": "gravi_application\\DTOs\\AddUserDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T02:57:43.309Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
               "Title": "Person.cs",
               "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\Entities\\Person.cs",
               "RelativeDocumentMoniker": "gravi_domain\\Entities\\Person.cs",
@@ -39,37 +285,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 10,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\Entities\\User.cs",
               "RelativeDocumentMoniker": "gravi_domain\\Entities\\User.cs",
               "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_domain\\Entities\\User.cs",
               "RelativeToolTip": "gravi_domain\\Entities\\User.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAOAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-13T05:05:37.074Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 13,
               "Title": "PersonDTO.cs",
               "DocumentMoniker": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\DTOs\\PersonDTO.cs",
               "RelativeDocumentMoniker": "gravi_application\\DTOs\\PersonDTO.cs",
               "ToolTip": "C:\\Users\\Nadir\\Desktop\\backend\\gravi_application\\DTOs\\PersonDTO.cs",
               "RelativeToolTip": "gravi_application\\DTOs\\PersonDTO.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-13T05:04:29.619Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
             }
           ]
         }

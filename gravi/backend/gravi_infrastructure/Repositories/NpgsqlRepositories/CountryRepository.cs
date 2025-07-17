@@ -17,7 +17,7 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
     {
         public CountryRepository(DbConnection connection, DbTransaction? transaction, ILogger<CountryRepository> logger) : base(connection, transaction, logger) { }
 
-        public async Task<Country?> FindByName(string name)
+        public async Task<Country?> FindByNameAsync(string name)
         {
             const string sql = "SELECT * FROM get_country_by_name(@name);";
 
@@ -30,7 +30,7 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
             return await reader.ReadAsync() ? MapCountryFromReader(reader) : null;
         }
 
-        public async Task<Country?> FindById(int id)
+        public async Task<Country?> FindByIdAsync(int id)
         {
             
             const string sql = "SELECT * FROM get_country_by_id(@id);";
@@ -44,13 +44,43 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
             return await reader.ReadAsync() ? MapCountryFromReader(reader) : null;
         }
 
+        public async Task<IEnumerable<Country?>> GetAllCountriesAsync()
+        {
+            List<Country> countries = new List<Country>();
+
+            const string sql = "SELECT * FROM get_all_countries();";
+
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction);
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    countries.Add(MapCountryFromReader(reader));
+                }
+
+                return countries;
+            }
+            catch(NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex}");
+                return new List<Country>();
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError($"Unexpected error occured: {ex}");
+                return new List<Country>();
+            }
+        }
 
         private Country MapCountryFromReader(NpgsqlDataReader reader)
         {
             return new Country 
             {
                 CountryId = reader.Get<int>("country_id"),
-                CountryName = reader.Get<string>("name")
+                CountryName = reader.Get<string>("country_name")
             };
         }
 

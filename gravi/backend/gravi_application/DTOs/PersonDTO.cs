@@ -11,12 +11,12 @@ namespace gravi_application.DTOs
     public class PersonDTO
     {
         public enum GenderType { NotProvided = 0, Male = 1, Female = 2 };
-        public long? PersonId { get; set; }
-        [Length(2, 50, ErrorMessage = "First name need to be between 2 and 50 characters.")]
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Length of first name need to be in the range of 2-50 characters only.")]
         public required string FirstName { get; set; }
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Length of last name need to be in the range of 2-50 characters only.")]
         public string? MiddleName { get; set; } = string.Empty;
 
-        [Length(2, 50, ErrorMessage = "Last name need to be between 2 and 50 characters.")]
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Length of last name need to be in the range of 2-50 characters only.")]
         public required string LastName { get; set; }
         public required CountryDTO Country { get; set; }
         public required DateTime DateOfBirth { get; set; }

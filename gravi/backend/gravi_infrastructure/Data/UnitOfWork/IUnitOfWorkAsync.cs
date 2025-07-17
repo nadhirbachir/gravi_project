@@ -1,4 +1,5 @@
-﻿using System;
+﻿using gravi_infrastructure.Data.UnitOfWork.RepositoryRegisters;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -17,5 +18,7 @@ namespace gravi_infrastructure.Data.UnitOfWork
         Task CommitAsync();
         Task RollBackAsync();
         Task DisposeAsync();
+
+        public IRepositoryRegistry Registry { get; }
     }
 }

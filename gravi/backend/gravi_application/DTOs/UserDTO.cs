@@ -9,6 +9,7 @@ namespace gravi_application.DTOs
 {
     public class UserDTO
     {
+        public enum UserStatus { Active = 0, InActive = 1, Suspended = 2 };
         public long? UserId { get; init; }
         public required PersonDTO Person { get; set; }
 
@@ -17,6 +18,8 @@ namespace gravi_application.DTOs
         public string? PhoneNumber { get; set; }
         [EmailAddress(ErrorMessage = "Invalid email address.")]
         public required string Email { get; set; }
-        public required bool IsEmailVerified { get; set; } = false;
+        public bool IsEmailVerified { get; set; } = false;
+        public required string PasswordHash { get; set; }
+        public required UserStatus Status { get; set; }
     }
 }

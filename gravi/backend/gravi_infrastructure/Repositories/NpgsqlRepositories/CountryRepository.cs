@@ -75,12 +75,38 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
             }
         }
 
+        public Country? FindByName(string name)
+        {
+            const string sql = "SELECT * FROM get_country_by_name(@name);";
+
+            using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters = { new NpgsqlParameter("name", name) }
+            };
+
+            using var reader = cmd.ExecuteReader();
+            return reader.Read() ? MapCountryFromReader(reader) : null;
+        }
+
+        public Country? FindById(int id)
+        {
+            const string sql = "SELECT * FROM get_country_by_id(@id);";
+
+            using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters = { new NpgsqlParameter("id", id) }
+            };
+
+            using var reader = cmd.ExecuteReader();
+            return reader.Read() ? MapCountryFromReader(reader) : null;
+        }
+
         private Country MapCountryFromReader(NpgsqlDataReader reader)
         {
             return new Country 
             {
                 CountryId = reader.Get<int>("country_id"),
-                CountryName = reader.Get<string>("country_name")
+                CountryName = reader.Get<string>("name")
             };
         }
 

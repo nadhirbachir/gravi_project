@@ -15,11 +15,11 @@ namespace gravi_application.DTOs
 
         [Length(2, 50, ErrorMessage = "Length need to be in the range of 2-50 characters only.")]
         public required string Username { get; set; }
+        [Phone(ErrorMessage = "Invalid phone number")]
         public string? PhoneNumber { get; set; }
         [EmailAddress(ErrorMessage = "Invalid email address.")]
         public required string Email { get; set; }
         public bool IsEmailVerified { get; set; } = false;
-        public required string PasswordHash { get; set; }
         public required UserStatus Status { get; set; }
     }
 }

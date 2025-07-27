@@ -1,4 +1,5 @@
-﻿using System;
+﻿using gravi_domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
@@ -10,7 +11,9 @@ namespace gravi_application.DTOs
 {
     public class PersonDTO
     {
-        public enum GenderType { NotProvided = 0, Male = 1, Female = 2 };
+        //public enum GenderType { NotProvided = 0, Male = 1, Female = 2 };
+        public long? PersonId { get; init; }
+
         [StringLength(50, MinimumLength = 2, ErrorMessage = "Length of first name need to be in the range of 2-50 characters only.")]
         public required string FirstName { get; set; }
         [StringLength(50, MinimumLength = 2, ErrorMessage = "Length of last name need to be in the range of 2-50 characters only.")]

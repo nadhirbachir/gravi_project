@@ -1,53 +1,57 @@
 ﻿using gravi_application.DTOs;
 using gravi_application.Interfaces;
+using gravi_application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gravi_presentation.Controllers
 {
     [ApiController]
-    [Route("testapi/[Controller]")]
+    [Route("testapi/[controller]")]
     public class TestController : ControllerBase
     {
-        private readonly ICountryService _countryService; // Assuming ICountryService is the interface
+        private readonly IUserPersonFactoryService _userPersonFactoryService;
 
         // Inject the service via constructor
-        public TestController(ICountryService countryService)
+        public TestController(IUserPersonFactoryService userPersonFactoryService)
         {
-            _countryService = countryService;
+            _userPersonFactoryService = userPersonFactoryService;
         }
 
-        [HttpGet("GetCountryById/{id}")]
-        public async Task<ActionResult<CountryDTO>> GetCountryById(int id)
+        [HttpPost("Add_new_person")]
+        public async Task<ActionResult<UserDTO>> AddUser([FromBody] AddUserDTO dto)
         {
-            var country = await _countryService.FindCountryByIdAsync(id);
-            if (country == null)
+            if (dto == null)
+                return BadRequest(new { Error = "The user DTO cannot be null" });
+
+            if (!ModelState.IsValid)
             {
-                return NotFound();  // Return 404 if country is not found
+                // Collect error messages from ModelState
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return BadRequest(new { Errors = errors });
             }
 
-            return Ok(country); // Return the country if found
-        }
-
-        [HttpGet("GetCountryByName/{name}")]
-        public async Task<ActionResult<CountryDTO>> GetCountryByName(string name)
-        {
-            var country = await _countryService.FindCountryByNameAsync(name);
-            if (country == null)
+            try
             {
-                return NotFound();
-            }
-            return Ok(country);
-        }
+                var newUser = await _userPersonFactoryService.CreateUserWithPersonAsync(dto);
 
-        [HttpGet("GetCountries")]
-        public async Task<ActionResult<IEnumerable<CountryDTO>>> GetCountries()
-        {
-            var countries = await _countryService.GetAllCountriesAsync();
-            if (countries == null)
-            {
-                return NotFound();
+                if (newUser.NewUser != null)
+                {
+                    return Ok(new { Message = newUser.Message, NewUser = newUser.NewUser });
+                }
+                else
+                {
+                    return BadRequest(new { Message = newUser.Message });
+                }
             }
-            return Ok(countries);
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = "The user was NOT added", ExceptionMessage = ex.Message });
+            }
         }
     }
+
 }

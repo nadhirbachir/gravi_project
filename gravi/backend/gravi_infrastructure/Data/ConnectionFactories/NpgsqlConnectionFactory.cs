@@ -61,7 +61,7 @@ namespace gravi_infrastructure.Data.ConnectionFactories
             catch (Exception ex)
             {
                 // Proper error handling and logging for connection creation failures.
-                _logger.LogError(ex, "Failed to create database connection.");
+                _logger.LogError(ex.Message, "Failed to create database connection.");
                 throw; // Re-throw the exception to propagate the error.
             }
         }

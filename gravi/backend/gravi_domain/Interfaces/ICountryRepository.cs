@@ -11,6 +11,8 @@ namespace gravi_domain.Interfaces
     {
         Task<Country?> FindByNameAsync(string name);
         Task<Country?> FindByIdAsync(int id);
+        Country? FindByName(string name);
+        Country? FindById(int id);
         Task<IEnumerable<Country?>> GetAllCountriesAsync();
     }
 }

@@ -232,3 +232,8 @@ C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rjimswa.dswa.
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
 C:\Users\Nadir\Desktop\backend\gravi_presentation\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Users\Nadir\Desktop\backend\gravi_presentation\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+C:\Users\Nadir\Desktop\backend\gravi_presentation\bin\Debug\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\Nadir\Desktop\backend\gravi_presentation\bin\Debug\net8.0\Microsoft.Extensions.ObjectPool.dll
+C:\Users\Nadir\Desktop\backend\gravi_presentation\bin\Debug\net8.0\Microsoft.Extensions.WebEncoders.dll
+C:\Users\Nadir\Desktop\backend\gravi_presentation\bin\Debug\net8.0\System.Security.Cryptography.Xml.dll

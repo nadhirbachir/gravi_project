@@ -9,13 +9,14 @@ namespace gravi_domain.Interfaces
 {
     public interface IUserRepository
     {
-        Task<(string Message, long? Result)> AddUser(User newUser);
-        Task<(string Message, bool Result)> UpdateUser(User user);
-        Task<(string Message, bool Result)> DeleteUser(long userId, string passwordHash);
-        Task<User?> FindUserById(long userId);
-        Task<User?> FindUserByPersonId(long personId);
-        Task<User?> FindUserByEmail(string email);
-        Task<User?> FindUserByUsername(string username);
-        Task<User?> LogUser(string usernameOrEmail, string password);
+        Task<(string Message, long? Result)> AddUserAsync(User newUser);
+        Task<(string Message, bool Result)> UpdateUserAsync(User user);
+        Task<(string Message, bool Result)> DeleteUserAsync(long userId, string passwordHash);
+        Task<User?> FindUserByIdAsync(long? userId);
+        Task<User?> FindUserByPersonIdAsync(long? personId);
+        Task<User?> FindUserByEmailAsync(string? email);
+        Task<User?> FindUserByUsernameAsync(string? username);
+        Task<bool> UserExistsByPersonIdAsync(long? personId);
+        Task<User?> LogUserAsync(string usernameOrEmail, string password);
     }
 }

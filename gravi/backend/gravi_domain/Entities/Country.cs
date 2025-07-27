@@ -8,7 +8,7 @@ namespace gravi_domain.Entities
 {
     public class Country
     {
-        public required int CountryId { get; init; }
-        public required string CountryName { get; init; }
+        public int CountryId { get; init; }
+        public string CountryName { get; init; }
     }
 }

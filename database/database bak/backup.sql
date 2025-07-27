@@ -880,6 +880,23 @@ $$;
 ALTER PROCEDURE public.fully_approve_company(IN p_company_id uuid) OWNER TO postgres;
 
 --
+-- Name: get_all_countries(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_all_countries() RETURNS TABLE(country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	RETURN QUERY
+		SELECT c.country_id, name AS country_name
+		FROM countries c;
+END
+$$;
+
+
+ALTER FUNCTION public.get_all_countries() OWNER TO postgres;
+
+--
 -- Name: get_company_admins(uuid); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1122,6 +1139,38 @@ $$;
 ALTER FUNCTION public.get_messages(p_chat_id uuid, p_limit integer, p_page_number integer) OWNER TO postgres;
 
 --
+-- Name: get_person_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_person_by_id(p_person_id bigint) RETURNS TABLE(person_id bigint, first_name character varying, middle_name character varying, last_name character varying, country_id integer, country_name character varying, date_of_birth date, gender smallint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.person_id, 
+        p.first_name, 
+        p.middle_name, 
+        p.last_name, 
+        c.country_id, 
+        c.name AS country_name, 
+        p.date_of_birth, 
+        p.gender
+    FROM people p
+    INNER JOIN countries c ON p.country_id = c.country_id
+    WHERE p.person_id = p_person_id;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN QUERY SELECT NULL::BIGINT, NULL::VARCHAR(50), NULL::VARCHAR(50), 
+            NULL::VARCHAR(50), NULL::INT, NULL::VARCHAR(128), NULL::DATE, NULL::SMALLINT;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_person_by_id(p_person_id bigint) OWNER TO postgres;
+
+--
 -- Name: get_user_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1155,6 +1204,33 @@ $$;
 ALTER FUNCTION public.get_user_by_id(p_user_id bigint) OWNER TO postgres;
 
 --
+-- Name: get_user_by_person_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_by_person_id(p_person_id bigint) RETURNS TABLE(person_id bigint, user_id bigint, phone_number text, email text, is_email_verified boolean, status smallint, first_name text, middle_name text, last_name text, country_id integer, country_name text, date_of_birth date, gender smallint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+
+	RETURN QUERY
+	SELECT p.person_id, u.user_id, u.username, u.phone_number, u.email, u.is_email_verified, u.status,
+		p.first_name, p.middle_name, p.last_name, c.country_id, c.name AS country_name, p.date_of_birth,
+		p.gender
+	FROM users u JOIN people p USING(person_id) 
+	JOIN countries c ON p.country_id = c.country_id
+	WHERE u.person_id = p_person_id;
+	
+	EXCEPTION
+	WHEN OTHERS THEN
+	RAISE 'there was problem in fetching user % data: %', p_person_id, SQLERRM;
+	
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_by_person_id(p_person_id bigint) OWNER TO postgres;
+
+--
 -- Name: get_user_chats(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1180,6 +1256,50 @@ $$;
 
 
 ALTER FUNCTION public.get_user_chats(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: get_user_details_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_details_by_id(p_user_id bigint) RETURNS TABLE(user_id bigint, person_id bigint, username character varying, phone_number character varying, email character varying, is_email_verified boolean, status smallint, first_name character varying, middle_name character varying, last_name character varying, date_of_birth date, gender smallint, country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        u.user_id, 
+        u.person_id, 
+        u.username, 
+        u.phone_number, 
+		u.email,
+        u.is_email_verified, 
+        u.status, 
+        p.first_name, 
+        p.middle_name, 
+        p.last_name, 
+        p.date_of_birth, 
+        p.gender,
+        c.country_id, 
+        c.name AS country_name
+    FROM 
+        users u
+    JOIN 
+        people p ON p.person_id = u.person_id
+    JOIN 
+        countries c ON p.country_id = c.country_id
+    WHERE 
+        u.user_id = p_user_id;
+    
+
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Catch all errors and raise with user ID
+        RAISE EXCEPTION 'Error occurred while retrieving user with ID %: %', p_user_id, SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_details_by_id(p_user_id bigint) OWNER TO postgres;
 
 --
 -- Name: give_ownership(uuid, bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1292,6 +1412,30 @@ $$;
 
 
 ALTER FUNCTION public.is_user_company_owner(p_user_id integer, p_company_id integer) OWNER TO postgres;
+
+--
+-- Name: person_exists(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.person_exists(p_person_id bigint) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    exists BOOLEAN;
+BEGIN
+    -- Check if the person exists
+    SELECT EXISTS (
+        SELECT 1
+        FROM people
+        WHERE person_id = p_person_id
+    ) INTO exists;
+
+    RETURN exists;
+END;
+$$;
+
+
+ALTER FUNCTION public.person_exists(p_person_id bigint) OWNER TO postgres;
 
 --
 -- Name: prevent_duplicate_or_reversed_connections(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2060,6 +2204,26 @@ $$;
 
 
 ALTER FUNCTION public.user_exists(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: user_exists_by_person_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_exists_by_person_id(p_person_id bigint) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	
+	RETURN EXISTS (SELECT 1 FROM users u WHERE u.person_id = p_person_id);
+	
+	EXCEPTION
+	WHEN OTHERS THEN
+	RETURN FALSE;
+END
+$$;
+
+
+ALTER FUNCTION public.user_exists_by_person_id(p_person_id bigint) OWNER TO postgres;
 
 --
 -- Name: user_pending_company_exists(bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -3452,6 +3616,7 @@ COPY public.people (person_id, first_name, middle_name, last_name, country_id, d
 1	mohammed	sami	yousef	3	1998-01-01	1	2025-06-05 07:29:10.150337	2025-06-05 07:29:10.150337
 9	dounia	marry	ali	6	2001-05-01	2	2025-06-06 07:16:04.168788	2025-06-06 07:16:04.168788
 4	houd	rami	ali	22	1999-12-04	1	2025-06-05 09:15:39.071303	2025-06-06 13:04:49.479647
+19	hamza	sami	yousef	51	2000-07-22	1	2025-07-27 06:48:27.305102	2025-07-27 06:48:27.305102
 \.
 
 
@@ -3676,6 +3841,7 @@ COPY public.user_skills (user_skill_id, user_id, skill_id, profi_level, years_of
 COPY public.users (user_id, person_id, username, phone_number, email, is_email_verified, password_hash, status, last_login, created_at, updated_at) FROM stdin;
 1	1	user1	+1998982340	user1@email.com	f	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-08 06:21:22.735508	2025-06-08 06:21:22.735508	2025-06-08 06:21:22.735508
 3	9	user3	+12198403850	someone@something.com	t	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803
+11	19	thisishamza	0702856193	userhamza@example.com	f	AQAAAAIAAYagAAAAELf+PLuiqjhnS0g0D5h0SOn93wxk8o6L20bQQYLmMywI1GjzvuUhn62YqCeeMsbqJA==	0	2025-07-27 06:48:27.305102	2025-07-27 06:48:27.305102	2025-07-27 06:48:27.305102
 \.
 
 
@@ -3739,7 +3905,7 @@ SELECT pg_catalog.setval('public.learning_modes_learning_mode_id_seq', 6, true);
 -- Name: people_person_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.people_person_id_seq', 12, true);
+SELECT pg_catalog.setval('public.people_person_id_seq', 19, true);
 
 
 --
@@ -3781,7 +3947,7 @@ SELECT pg_catalog.setval('public.user_skills_user_skill_id_seq', 6, true);
 -- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_user_id_seq', 8, true);
+SELECT pg_catalog.setval('public.users_user_id_seq', 11, true);
 
 
 --

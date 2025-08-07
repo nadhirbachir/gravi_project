@@ -599,10 +599,10 @@ $$;
 ALTER FUNCTION public.delete_person(p_person_id bigint) OWNER TO postgres;
 
 --
--- Name: delete_user(bigint, text); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: delete_user_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.delete_user(p_user_id bigint, p_password_hash text) RETURNS integer
+CREATE FUNCTION public.delete_user_by_id(p_user_id bigint) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -610,7 +610,7 @@ DECLARE
     delete_count INTEGER;
 BEGIN
     -- Check if user exists
-    SELECT u.person_id INTO v_person_id FROM users u WHERE u.user_id = p_user_id AND u.password_hash = p_password_hash;
+    SELECT u.person_id INTO v_person_id FROM users u WHERE u.user_id = p_user_id;
 
 	IF v_person_id IS NULL OR NOT EXISTS (SELECT 1 FROM people p WHERE p.person_id = v_person_id)
 	THEN RETURN -1; END IF;
@@ -628,7 +628,7 @@ BEGIN
         
     EXCEPTION
         WHEN foreign_key_violation THEN
-            RETURN -11; -- Cannot delete due to foreign key constraints
+            RETURN -2; -- Cannot delete due to foreign key constraints
         WHEN OTHERS THEN
             RETURN 0; -- Unexpected exception
     END;
@@ -637,7 +637,7 @@ END;
 $$;
 
 
-ALTER FUNCTION public.delete_user(p_user_id bigint, p_password_hash text) OWNER TO postgres;
+ALTER FUNCTION public.delete_user_by_id(p_user_id bigint) OWNER TO postgres;
 
 --
 -- Name: edu_mview_changes_trgfun(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1139,6 +1139,32 @@ $$;
 ALTER FUNCTION public.get_messages(p_chat_id uuid, p_limit integer, p_page_number integer) OWNER TO postgres;
 
 --
+-- Name: get_password_hash_by_user_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_password_hash_by_user_id(p_user_id bigint) RETURNS character varying
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	v_password_hash VARCHAR(128);
+BEGIN
+
+	SELECT u.password_hash INTO v_password_hash
+	FROM users u where u.user_id = p_user_id;
+
+	RETURN v_password_hash;
+
+	EXCEPTION
+	WHEN OTHERS THEN
+	RAISE 'failed retrieving password hash by user id % : %' , p_user_id, SQLERRM;
+
+END;
+$$;
+
+
+ALTER FUNCTION public.get_password_hash_by_user_id(p_user_id bigint) OWNER TO postgres;
+
+--
 -- Name: get_person_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1258,6 +1284,30 @@ $$;
 ALTER FUNCTION public.get_user_chats(p_user_id bigint) OWNER TO postgres;
 
 --
+-- Name: get_user_details_by_email(text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_details_by_email(p_email text) RETURNS TABLE(user_id bigint, person_id bigint, username character varying, phone_number character varying, email character varying, is_email_verified boolean, status smallint, first_name character varying, middle_name character varying, last_name character varying, date_of_birth date, gender smallint, country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM user_details ud
+    WHERE 
+		ud.email = p_email;
+    
+
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Catch all errors and raise with user ID
+        RAISE EXCEPTION 'Error occurred while retrieving user with email %: %', p_email, SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_details_by_email(p_email text) OWNER TO postgres;
+
+--
 -- Name: get_user_details_by_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1266,29 +1316,9 @@ CREATE FUNCTION public.get_user_details_by_id(p_user_id bigint) RETURNS TABLE(us
     AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
-        u.user_id, 
-        u.person_id, 
-        u.username, 
-        u.phone_number, 
-		u.email,
-        u.is_email_verified, 
-        u.status, 
-        p.first_name, 
-        p.middle_name, 
-        p.last_name, 
-        p.date_of_birth, 
-        p.gender,
-        c.country_id, 
-        c.name AS country_name
-    FROM 
-        users u
-    JOIN 
-        people p ON p.person_id = u.person_id
-    JOIN 
-        countries c ON p.country_id = c.country_id
+    SELECT * FROM user_details ud
     WHERE 
-        u.user_id = p_user_id;
+        ud.user_id = p_user_id;
     
 
 EXCEPTION
@@ -1300,6 +1330,79 @@ $$;
 
 
 ALTER FUNCTION public.get_user_details_by_id(p_user_id bigint) OWNER TO postgres;
+
+--
+-- Name: get_user_details_by_id(text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_details_by_id(p_username_or_email text) RETURNS TABLE(user_id bigint, person_id bigint, username character varying, phone_number character varying, email character varying, is_email_verified boolean, status smallint, password_hash text, first_name character varying, middle_name character varying, last_name character varying, date_of_birth date, gender smallint, country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM user_log_details ud
+    WHERE 
+        ud.username = p_username_or_email
+		OR ud.email = p_username_or_email;
+    
+
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Catch all errors and raise with user ID
+        RAISE EXCEPTION 'Error occurred while retrieving user with username/email  %: %', p_username_or_email, SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_details_by_id(p_username_or_email text) OWNER TO postgres;
+
+--
+-- Name: get_user_details_by_person_id(bigint); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_details_by_person_id(p_person_id bigint) RETURNS TABLE(user_id bigint, person_id bigint, username character varying, phone_number character varying, email character varying, is_email_verified boolean, status smallint, first_name character varying, middle_name character varying, last_name character varying, date_of_birth date, gender smallint, country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM user_details ud
+    WHERE 
+        ud.person_id = p_person_id;
+    
+
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Catch all errors and raise with user ID
+        RAISE EXCEPTION 'Error occurred while retrieving user with person id %: %', p_person_id, SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_details_by_person_id(p_person_id bigint) OWNER TO postgres;
+
+--
+-- Name: get_user_details_by_username(text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_user_details_by_username(p_username text) RETURNS TABLE(user_id bigint, person_id bigint, username character varying, phone_number character varying, email character varying, is_email_verified boolean, status smallint, first_name character varying, middle_name character varying, last_name character varying, date_of_birth date, gender smallint, country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM user_details ud
+    WHERE 
+        ud.username = p_username;
+    
+
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Catch all errors and raise with user ID
+        RAISE EXCEPTION 'Error occurred while retrieving user with username %: %', p_username, SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.get_user_details_by_username(p_username text) OWNER TO postgres;
 
 --
 -- Name: give_ownership(uuid, bigint); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2226,6 +2329,47 @@ $$;
 ALTER FUNCTION public.user_exists_by_person_id(p_person_id bigint) OWNER TO postgres;
 
 --
+-- Name: user_log_details(text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.user_log_details(p_username_or_email text) RETURNS TABLE(user_id bigint, person_id bigint, username character varying, phone_number character varying, email character varying, is_email_verified boolean, status smallint, password_hash text, first_name character varying, middle_name character varying, last_name character varying, date_of_birth date, gender smallint, country_id integer, country_name character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Return query with explicit column selection
+    RETURN QUERY
+    SELECT 
+        ud.user_id,
+        ud.person_id,
+        ud.username,
+        ud.phone_number,
+        ud.email,
+        ud.is_email_verified,
+        ud.status,
+        ud.password_hash::TEXT,
+        ud.first_name,
+        ud.middle_name,
+        ud.last_name,
+        ud.date_of_birth,
+        ud.gender,
+        ud.country_id,
+        ud.country_name
+    FROM user_log_details ud
+    WHERE 
+        ud.username = p_username_or_email
+        OR ud.email = p_username_or_email;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Catch all errors and raise with user ID
+        RAISE EXCEPTION 'Error occurred while retrieving user with username/email %: %', p_username_or_email, SQLERRM;
+END;
+$$;
+
+
+ALTER FUNCTION public.user_log_details(p_username_or_email text) OWNER TO postgres;
+
+--
 -- Name: user_pending_company_exists(bigint); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -3027,6 +3171,59 @@ ALTER SEQUENCE public.skills_skill_id_seq OWNED BY public.skills.skill_id;
 
 
 --
+-- Name: user_details; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.user_details AS
+ SELECT u.user_id,
+    u.person_id,
+    u.username,
+    u.phone_number,
+    u.email,
+    u.is_email_verified,
+    u.status,
+    p.first_name,
+    p.middle_name,
+    p.last_name,
+    p.date_of_birth,
+    p.gender,
+    c.country_id,
+    c.name AS country_name
+   FROM ((public.users u
+     JOIN public.people p ON ((p.person_id = u.person_id)))
+     JOIN public.countries c ON ((p.country_id = c.country_id)));
+
+
+ALTER VIEW public.user_details OWNER TO postgres;
+
+--
+-- Name: user_log_details; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.user_log_details AS
+ SELECT u.user_id,
+    u.person_id,
+    u.username,
+    u.phone_number,
+    u.email,
+    u.is_email_verified,
+    u.status,
+    u.password_hash,
+    p.first_name,
+    p.middle_name,
+    p.last_name,
+    p.date_of_birth,
+    p.gender,
+    c.country_id,
+    c.name AS country_name
+   FROM ((public.users u
+     JOIN public.people p ON ((p.person_id = u.person_id)))
+     JOIN public.countries c ON ((p.country_id = c.country_id)));
+
+
+ALTER VIEW public.user_log_details OWNER TO postgres;
+
+--
 -- Name: user_owned_companies_view; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -3616,7 +3813,6 @@ COPY public.people (person_id, first_name, middle_name, last_name, country_id, d
 1	mohammed	sami	yousef	3	1998-01-01	1	2025-06-05 07:29:10.150337	2025-06-05 07:29:10.150337
 9	dounia	marry	ali	6	2001-05-01	2	2025-06-06 07:16:04.168788	2025-06-06 07:16:04.168788
 4	houd	rami	ali	22	1999-12-04	1	2025-06-05 09:15:39.071303	2025-06-06 13:04:49.479647
-19	hamza	sami	yousef	51	2000-07-22	1	2025-07-27 06:48:27.305102	2025-07-27 06:48:27.305102
 \.
 
 
@@ -3841,7 +4037,6 @@ COPY public.user_skills (user_skill_id, user_id, skill_id, profi_level, years_of
 COPY public.users (user_id, person_id, username, phone_number, email, is_email_verified, password_hash, status, last_login, created_at, updated_at) FROM stdin;
 1	1	user1	+1998982340	user1@email.com	f	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-08 06:21:22.735508	2025-06-08 06:21:22.735508	2025-06-08 06:21:22.735508
 3	9	user3	+12198403850	someone@something.com	t	0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e	0	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803	2025-06-24 18:55:59.992803
-11	19	thisishamza	0702856193	userhamza@example.com	f	AQAAAAIAAYagAAAAELf+PLuiqjhnS0g0D5h0SOn93wxk8o6L20bQQYLmMywI1GjzvuUhn62YqCeeMsbqJA==	0	2025-07-27 06:48:27.305102	2025-07-27 06:48:27.305102	2025-07-27 06:48:27.305102
 \.
 
 

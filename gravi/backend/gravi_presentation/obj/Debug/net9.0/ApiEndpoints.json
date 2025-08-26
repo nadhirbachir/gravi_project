@@ -1,0 +1,28 @@
+[
+  {
+    "ContainingType": "gravi_presentation.Controllers.TestController",
+    "Method": "AddUser",
+    "RelativePath": "testapi/Test/Add_new_person",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "gravi_application.DTOs.AddUserDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "gravi_application.DTOs.UserDTO",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  }
+]

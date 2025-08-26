@@ -1,15 +1,17 @@
-﻿using System;
+﻿using gravi_domain.Entities;
+using gravi_domain.Interfaces;
+using gravi_infrastructure.Data.Extensions;
+using gravi_infrastructure.Repositories.Base;
+using gravi_infrastructure.Repositories.Utilities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using gravi_domain.Entities;
-using gravi_domain.Interfaces;
-using gravi_infrastructure.Data.Extensions;
-using gravi_infrastructure.Repositories.Base;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 
 namespace gravi_infrastructure.Repositories.NpgsqlRepositories
 {
@@ -58,12 +60,120 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
 
         public async Task<(string Message, bool Result)> UpdateUserAsync(User user)
         {
-            throw new NotImplementedException();
+            if (user == null) return ("Parameters Error, can't update the user.", false);
+
+            const string sql = "SELECT update_user_by_id(@user_id, @username, @phone_number, @email);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("user_id", user.UserId),
+                    new NpgsqlParameter("username", user.Username),
+                    new NpgsqlParameter("phone_number", user.PhoneNumber),
+                    new NpgsqlParameter ("email", user.Email)
+                }
+            };
+
+            try
+            {
+                object? result = await cmd.ExecuteScalarAsync();
+                if (int.TryParse(result?.ToString(), out int resultCode))
+                {
+                    return resultCode switch
+                    {
+                        > 0 => ("User updated successfuly", true),
+                        -1 => ("Person Id not found", false),
+                        -2 => ("username already exists", false),
+                        -3 => ("username length, or email/phone formats are wrong", false),
+                        _ => ("something went wrong", false)
+                    };
+                }
+                else
+                    return ("something went wrong", false);
+            }
+            catch(NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return ("something went wrong", false);
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return ("something went wrong", false);
+            }
+
         }
 
-        public async Task<(string Message, bool Result)> DeleteUserAsync(long userId, string passwordHash)
+        private async Task<bool> CheckPassword(long? userId, string? password)
         {
-            throw new NotImplementedException();
+            if(userId == null ||  password == null) return false;
+
+            const string sql = "SELECT get_password_hash_by_user_id(@user_id);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("user_id", userId.Value)
+                }
+            };
+
+            try
+            {
+                object? result = await cmd.ExecuteScalarAsync();
+                if (PasswordHasherUtil.Verify(result?.ToString(), password))
+                    return true;
+                return false;
+            }
+            catch (NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<(string Message, bool Result)> DeleteUserAsync(long? userId, string? passwordHash)
+        {
+            if(userId == null || passwordHash == null) return ("Parameters Error, can't delete the user.", false);
+
+            if (!await CheckPassword(userId, passwordHash)) return ("User password is incorrect, can't delete the user.", false);
+
+            const string sql = "SELECT delete_user_by_id(@user_id);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("user_id", userId.Value)
+                }
+            };
+
+            try
+            {
+                object? result = await cmd.ExecuteScalarAsync();
+
+                if (int.TryParse(result?.ToString(), out int deleted))
+                {
+                    return MapDeleteUser(deleted);
+                }
+                else
+                    return ("Something went wrong.", false);
+            }
+            catch (NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return ("Something went wrong.", false);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return ("Something went wrong.", false);
+            }
+
+
         }
 
         public async Task<User?> FindUserByIdAsync(long? userId)
@@ -107,8 +217,39 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
         public async Task<User?> FindUserByPersonIdAsync(long? personId)
         {
             if (personId == null) return null;
-            return null;
-            
+
+            const string sql = "SELECT * FROM get_user_details_by_person_id(@personId);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("personId", personId.Value)
+                }
+            };
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+
+                if (reader.Read())
+                {
+                    return MapFindUserById(reader);
+                }
+                else return null;
+
+
+            }
+            catch (NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return null;
+            }
+
         }
 
         public async Task<bool> UserExistsByPersonIdAsync(long? personId)
@@ -147,21 +288,113 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
 
         public async Task<User?> FindUserByEmailAsync(string? email)
         {
-            if (!string.IsNullOrEmpty(email)) return null;
+            if (string.IsNullOrEmpty(email)) return null;
 
-            throw new NotImplementedException();
+            const string sql = "SELECT * FROM get_user_details_by_email(@email);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("email", email)
+                }
+            };
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+
+                if (reader.Read())
+                {
+                    return MapFindUserById(reader);
+                }
+                else return null;
+
+
+            }
+            catch (NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<User?> FindUserByUsernameAsync(string? username)
         {
-            if (!string.IsNullOrEmpty(username)) return null;
+            if (string.IsNullOrEmpty(username)) return null;
 
-            throw new NotImplementedException();
+            const string sql = "SELECT * FROM get_user_details_by_username(@username);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("username", username)
+                }
+            };
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+
+                if (reader.Read())
+                {
+                    return MapFindUserById(reader);
+                }
+                else return null;
+
+
+            }
+            catch (NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<User?> LogUserAsync(string usernameOrEmail, string password)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(usernameOrEmail) || string.IsNullOrEmpty(password)) return null;
+
+            const string sql = "SELECT * FROM get_user_details_by_username(@username_or_email);";
+            await using var cmd = new NpgsqlCommand(sql, Connection, Transaction)
+            {
+                Parameters =
+                {
+                    new NpgsqlParameter("username_or_email", usernameOrEmail)
+                }
+            };
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+
+                if (reader.Read())
+                {
+                    return MapLogUser(reader,  password);
+                }
+                else return null;
+
+
+            }
+            catch (NpgsqlException pgex)
+            {
+                Logger.LogError($"Npgsql Exception: {pgex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Unexpected Exception: {ex.Message}");
+                return null;
+            }
         }
 
 
@@ -205,6 +438,28 @@ namespace gravi_infrastructure.Repositories.NpgsqlRepositories
                 Email = reader.Get<string>("email"),
                 IsEmailVerified = reader.Get<bool>("is_email_verified"),
                 Status = (User.UserStatus)reader.Get<short>("status")
+            };
+        }
+
+        private User? MapLogUser(NpgsqlDataReader reader, string plainPassword)
+        {
+            if (reader == null) return null;
+
+            string password = reader.Get<string>("password_hash");
+            if(!PasswordHasherUtil.Verify(password, plainPassword)) return null;
+
+            return MapFindUserById(reader);
+        }
+
+        private (string, bool) MapDeleteUser(int? result)
+        {
+            return result switch
+            {
+                > 0 => ("User deleted successfuly.", true),
+                0 => ("Unexpected Exception occured.", false),
+                -1 => ("User not found to delete.", false),
+                -2 => ("Cannot delete due to foreign key constraints.", false),
+                _ => ("Something went wrong.", false)
             };
         }
     }

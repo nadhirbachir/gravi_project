@@ -11,7 +11,7 @@ namespace gravi_domain.Interfaces
     {
         Task<(string Message, long? Result)> AddUserAsync(User newUser);
         Task<(string Message, bool Result)> UpdateUserAsync(User user);
-        Task<(string Message, bool Result)> DeleteUserAsync(long userId, string passwordHash);
+        Task<(string Message, bool Result)> DeleteUserAsync(long? userId, string? passwordHash);
         Task<User?> FindUserByIdAsync(long? userId);
         Task<User?> FindUserByPersonIdAsync(long? personId);
         Task<User?> FindUserByEmailAsync(string? email);

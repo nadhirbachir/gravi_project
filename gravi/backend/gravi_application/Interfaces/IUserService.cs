@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace gravi_application.Interfaces
 {
-    internal interface IUserService
+    public interface IUserService
     {
     }
 }

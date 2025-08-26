@@ -5,22 +5,29 @@ using gravi_presentation.StartupExtensions;
 
 namespace gravi_presentation
 {
-    public class Startup
+    public static class Startup
     {
-        public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration config)
         {
             // Add framework services
-            services.AddControllers();
+            services.AddControllers(options => options.AddFilters());
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
             
             // Add custom services
             services.AddAutoMapperProfiles();
+            services.AddInfrastructureServices(config);
             services.AddApplicationServices();
-            services.AddInfrastructureServices();
+
+            // Setting the Auth services
+            services.AddAuthenticationServices(config);
+            services.AddAuthorizationServices();
+
+            return services;
         }
 
-        public static void Configure(WebApplication app, IWebHostEnvironment env)
+
+        public static WebApplication ConfigureApplication(this WebApplication app)
         {
             if (app.Environment.IsDevelopment())
             {
@@ -32,6 +39,8 @@ namespace gravi_presentation
             app.UseRouting();
             app.UseAuthorization();
             app.MapControllers();
+
+            return app;
         }
     }
 }
